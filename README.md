@@ -6,7 +6,7 @@ This repository is intentionally separate from operational flight-control firmwa
 
 ## Project context
 
-The planned repository family separates hardware, hardware testing, flight firmware, simulation, the drone platform, and project-wide documentation. This repository owns only hardware-test orchestration, manufacturing-test firmware, the host/device test protocol, test configuration, and reports. System-level context belongs in the sibling `project-documentation` repository.
+The [OpenFlightComputer GitHub organization](https://github.com/OpenFlightComputer) separates hardware, hardware testing, flight firmware, simulation, the drone platform, and project-wide documentation. This repository owns only hardware-test orchestration, manufacturing-test firmware, the host/device test protocol, test configuration, and reports. System-level context belongs in the sibling [project-documentation](https://github.com/OpenFlightComputer/project-documentation) repository, while the authoritative KiCad design belongs in [flight-computer-hardware](https://github.com/OpenFlightComputer/flight-computer-hardware).
 
 ## Intended architecture
 
@@ -30,7 +30,7 @@ Board configuration will describe physical hardware. Test configuration will hol
 
 ## Current state
 
-Milestone 0 is complete locally: the hardware source was inspected, the project name was checked, repository hygiene and context documentation were added, and the repositories were initialized locally. No executable host or firmware skeleton exists yet by design.
+Milestone 0 is complete: the authoritative hardware source was inspected, repository hygiene and context documentation were added, and the initial repositories were organized under the OpenFlightComputer GitHub organization. No executable host or firmware skeleton exists yet by design.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the handoff state, [ROADMAP.md](ROADMAP.md) for planned milestones, and [docs/hardware-reference.md](docs/hardware-reference.md) for the reviewed hardware interface.
 
