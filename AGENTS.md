@@ -16,3 +16,5 @@ Keep these boundaries explicit:
 Do not guess routed pins or silently modify a historical test configuration. Do not add flight firmware, GUI work, CI/CD, binary protocol encoding, DFU, a custom bootloader, automated fixtures, or speculative MCU/board support unless the active milestone explicitly requires it.
 
 Preserve result traceability to the STM32 UID, exact board/test configuration hashes, test UUID, firmware version/commit, and timestamps. Prefer simple, deterministic, inspectable behavior.
+
+Always ask the project owner for approval immediately before creating or amending a Git commit.
