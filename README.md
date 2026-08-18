@@ -1,0 +1,53 @@
+# OpenFlightComputer Hardware Test
+
+`flight-computer-test` will be the host-controlled manufacturing and acceptance-test framework for custom OpenFlightComputer PCBs. Its first supported target is the current STM32F405RGT6 flight computer with a BMI270 IMU, BMP388 barometer, microSD, USB-C, discrete status LEDs, and a WS2812 RGB LED.
+
+This repository is intentionally separate from operational flight-control firmware. The host will eventually flash dedicated manufacturing firmware over ST-Link/SWD, communicate with it over USB CDC using newline-delimited JSON, run tests in configuration order, guide operator interactions, and persist traceable results under the STM32 factory UID.
+
+## Project context
+
+The planned repository family separates hardware, hardware testing, flight firmware, simulation, the drone platform, and project-wide documentation. This repository owns only hardware-test orchestration, manufacturing-test firmware, the host/device test protocol, test configuration, and reports. System-level context belongs in the sibling `project-documentation` repository.
+
+## Intended architecture
+
+The host owns the workflow:
+
+```text
+test and board configurations
+            |
+            v
+host runner -> ST-Link flashing -> USB CDC protocol -> manufacturing firmware
+     |                                                    |
+     v                                                    v
+operator interaction and reports                 component tests -> hardware
+```
+
+The planned firmware dependency direction is protocol, application/core, component tests, hardware abstraction/drivers, then STM32F405 and board support. Only one component test will be active at a time in V1.
+
+The V1 protocol will use host-initiated `START_TEST`, `RUN_COMPONENT_TEST`, and `STOP_COMPONENT_TEST` commands. Responses correlate through command IDs; asynchronous functional events and non-functional debug messages remain separate.
+
+Board configuration will describe physical hardware. Test configuration will hold a UUID, reference a board configuration, and define ordered tests, parameters, and acceptance limits. Every result will capture SHA-256 hashes of both exact files.
+
+## Current state
+
+Milestone 0 is complete locally: the hardware source was inspected, the project name was checked, repository hygiene and context documentation were added, and the repositories were initialized locally. No executable host or firmware skeleton exists yet by design.
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the handoff state, [ROADMAP.md](ROADMAP.md) for planned milestones, and [docs/hardware-reference.md](docs/hardware-reference.md) for the reviewed hardware interface.
+
+## Usage
+
+The eventual V1 entry point will be:
+
+```bash
+fc-test run --config configs/test/<test-config>.json
+```
+
+It is not implemented in Milestone 0.
+
+## Supported hardware
+
+- Board: current Flight Computer V1 design; formal revision identifier still needs reconciliation
+- MCU: STM32F405RGT6
+- Sensors: BMI270 and BMP388
+- Storage: microSD
+- Host links: ST-Link/SWD for programming and USB-C/USB CDC for the test protocol

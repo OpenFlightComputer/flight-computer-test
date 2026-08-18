@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Build output and generated firmware artifacts
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+*.elf
+*.hex
+*.bin
+*.map
+
+# Local tools and editors
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.log
+
+# Test reports contain device identifiers and are local by default.
+results/*
+!results/.gitkeep
