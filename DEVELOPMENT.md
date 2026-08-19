@@ -2,11 +2,21 @@
 
 ## Current milestone
 
-Milestone 1 — Repository skeleton and architecture: **complete in the working tree, pending owner review**.
+Milestone 2 — Initial CLI startup: **complete**.
 
-Stop here until the project owner reviews the changes and separately approves any commit and Milestone 2.
+Milestone 3 remains pending owner approval before implementation begins.
 
 ## Completed
+
+### Milestone 2
+
+- Added the sole V1 command shape: `fc-test run --config <path>`.
+- Required both the `run` command and `--config` option through standard-library `argparse` handling.
+- Added clear errors for missing paths and paths that are not files without reading or interpreting their contents.
+- Routed the validated request from `fc_test.main` to the central runner, which prints only the Milestone 2 startup summary.
+- Added the standard `fc-test` console entry point in `pyproject.toml` and an executable repository-root `./fc-test` bootstrap; both invoke the same `fc_test.main:main` implementation.
+- Adopted uv as the canonical Python environment manager, pinned Python 3.12, and generated the project lockfile.
+- Documented editable installation and repository-local usage.
 
 ### Milestone 1
 
@@ -31,6 +41,12 @@ Stop here until the project owner reviews the changes and separately approves an
 
 ## Important decisions
 
+- The uv console command and repository bootstrap are two launch routes, not two CLI implementations. All parsing remains in `fc_test.main`.
+- `./fc-test` delegates to `uv run --project board_tester`, ensuring both launch routes use the pinned and locked environment rather than whichever Python happens to be first on `PATH`.
+- uv is the sole project-level Python version and environment manager. `.python-version` selects the interpreter, `pyproject.toml` provides standard project/build metadata, and `uv.lock` records uv's resolved environment; setuptools is only the declared package build backend.
+- Configuration paths remain relative in the startup display and are resolved by normal filesystem semantics from the operator's working directory; the bootstrap does not change directories.
+- Milestone 2 validates only that the supplied path exists and is a file. JSON parsing, schema validation, path resolution between configurations, and hashing remain in Milestone 3.
+- Standard `argparse` usage errors return exit code 2; successful help and startup return exit code 0.
 - The computer-side software directory is named `board_tester` rather than the ambiguous `host` or `test_station`.
 - `identity` is not a test or firmware capability. Session identity is required initialization data and must be persisted before component dispatch.
 - The first intended component test is `mcu_runtime`; discrete LED tests use the explicit `status_leds` name.
@@ -44,9 +60,13 @@ Stop here until the project owner reviews the changes and separately approves an
 
 ## Validation performed
 
+- `uv sync --project board_tester` installed managed Python 3.12.12, created the ignored project environment, built the editable package, and generated the locked environment successfully.
+- `uv run --project board_tester fc-test` and the repository-root `./fc-test` bootstrap produced identical startup output for the same valid relative path.
+- CLI checks passed for no arguments, an unknown command, missing `--config`, a nonexistent path, a directory path, root help, and `run` help. Usage failures returned exit code 2 and valid/help cases returned 0.
+- The exact successful startup output was checked, including blank-line placement and the unchanged relative configuration path.
 - All required Milestone 1 directories and boundary files are present; no `identity` test directory exists.
 - `board_tester/pyproject.toml` parses and every Python skeleton module imports without bytecode side effects under the available Python 3.14.6 interpreter.
-- The exact Python 3.12 lower bound is not installed locally, so minimum-version compatibility was not exercised; the available Python 3.14.6 interpreter satisfies the declared Python 3.12+ requirement.
+- Milestone 1 imports were initially checked under the available Python 3.14.6 interpreter; Milestone 2 subsequently exercised the declared lower version family with isolated Python 3.12.12.
 - CMake is not currently installed or available on `PATH`, so the target-free firmware skeleton could not be configured in this environment. CMake is not required to produce an artifact until Milestone 4.
 - Git whitespace validation passes for the complete uncommitted Milestone 1 change set.
 - Both test/documentation repository baselines pass Git whitespace checks. Their `main` branches track the transferred organization remotes.
@@ -57,6 +77,7 @@ Stop here until the project owner reviews the changes and separately approves an
 
 ## Open issues and assumptions
 
+- Homebrew Python was upgraded from 3.14.6 to 3.14.7, but `pyexpat`, `venv`, and pip bootstrapping still fail on macOS 26.2 because the bottle expects an Expat symbol absent from that OS release. This is a known Homebrew/macOS issue; macOS 26.3 or later is the supported system-level fix. The uv-managed project environment is unaffected.
 - Install CMake before the Milestone 4 firmware build foundation. The current Milestone 1 `CMakeLists.txt` is intentionally target-free and remains unexecuted locally because the tool is unavailable.
 - Reconcile the formal board revision before creating the Milestone 3 board configuration: the schematic title block says revision `0.1`, while generated production files include names through `flightcomputer_v1.7_*`.
 - Choose and document the BMI270 MCU SPI instance. PB3/PB4/PB5 support more than one SPI alternate-function mapping; the routed hardware does not itself select one.
@@ -68,4 +89,4 @@ Stop here until the project owner reviews the changes and separately approves an
 
 ## Next milestone
 
-Milestone 2 will implement only the initial `fc-test run --config <path>` startup: argument parsing, the required command and option, path-existence validation, and a clear startup summary. It will not interpret configuration semantics, connect hardware, flash firmware, open serial communication, or execute tests.
+Milestone 3 will implement board/test configuration loading, referenced board-path resolution, UUID and basic schema validation, deterministic SHA-256 hashes, ordered enabled-test preservation, and the initial hardware-derived configuration files. It will not flash firmware, connect hardware, open serial communication, or execute component tests.

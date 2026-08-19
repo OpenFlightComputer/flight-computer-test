@@ -11,3 +11,14 @@ not a component test and must be persisted before test dispatch begins.
 Component-specific interaction and acceptance logic belongs in ``fc_test.tests``.
 """
 
+from pathlib import Path
+
+
+def run(configuration_path: Path) -> int:
+    """Print the Milestone 2 startup summary for a validated configuration path."""
+
+    print("OpenFlightComputer Hardware Test")
+    print()
+    print("Test configuration:")
+    print(configuration_path)
+    return 0

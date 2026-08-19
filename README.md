@@ -30,19 +30,28 @@ Board configuration will describe physical hardware. Test configuration will hol
 
 ## Current state
 
-Milestone 1 is complete in the working tree: the board-tester Python package and manufacturing-firmware architectural skeletons exist, with no executable CLI or hardware behavior by design.
+Milestone 2 is complete in the working tree: the board tester accepts only `run --config`, validates that the supplied path is a file, and prints a startup summary. It does not read configuration contents or access hardware.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the handoff state, [ROADMAP.md](ROADMAP.md) for planned milestones, [docs/repository-architecture.md](docs/repository-architecture.md) for responsibility boundaries, and [docs/hardware-reference.md](docs/hardware-reference.md) for the reviewed hardware interface.
 
 ## Usage
 
-The eventual V1 entry point will be:
+The board tester uses [uv](https://docs.astral.sh/uv/) as its sole Python version and environment manager. uv selects Python from the committed `.python-version`, synchronizes the environment from `pyproject.toml`, and locks the result in `uv.lock`. `pyproject.toml` is standard Python project/package metadata and build configuration, not a competing version-management tool.
+
+Synchronize the uv-managed development environment, then run the standard console entry point:
 
 ```bash
-fc-test run --config configs/test/<test-config>.json
+uv sync --project board_tester
+uv run --project board_tester fc-test run --config configs/test/<test-config>.json
 ```
 
-It is not implemented in Milestone 1.
+Or use the repository-local bootstrap, which delegates to the same uv project and console entry point:
+
+```bash
+./fc-test run --config configs/test/<test-config>.json
+```
+
+Both routes call `fc_test.main:main` in the locked uv environment. An actual test configuration will be added in Milestone 3.
 
 ## Supported hardware
 
