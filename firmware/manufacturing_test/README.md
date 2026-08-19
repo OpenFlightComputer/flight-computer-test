@@ -61,6 +61,15 @@ CMake stops with a direct missing-dependency error if these files are absent.
 
 ## Build
 
+From the repository root, the board-tester wrapper configures and builds the same CMake presets:
+
+```bash
+./fc-test firmware build
+./fc-test firmware build --profile debug
+```
+
+The wrapper does not duplicate compiler, source, or linker configuration. It invokes CMake and confirms that the expected ELF was produced.
+
 From this directory, configure and build Debug firmware:
 
 ```bash

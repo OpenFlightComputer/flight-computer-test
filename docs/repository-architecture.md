@@ -5,6 +5,8 @@
 | Area | Owns | Must not own |
 | --- | --- | --- |
 | `board_tester/fc_test/configuration.py` | Configuration loading, models, and validation | Test execution and hardware access |
+| `board_tester/fc_test/external_tools.py` | Shell-free, captured external-command execution | Tool-specific policy or output parsing |
+| `board_tester/fc_test/firmware.py` | CMake preset orchestration and firmware-artifact validation | Compiler, linker, or source configuration |
 | `board_tester/fc_test/runner.py` | End-to-end sequencing and initialization | Component-specific behavior |
 | `board_tester/fc_test/flashing/` | Installing manufacturing firmware | Communication, reports, or test policy |
 | `board_tester/fc_test/protocol/` | Connection, framing, and message correlation | Hardware behavior or acceptance limits |
@@ -28,4 +30,4 @@ Consequently there is no `identity` test package or capability. The first intend
 
 ## Current implementation boundary
 
-The CLI and configuration subsystem are implemented without hardware dependencies. Firmware directories and the flashing, protocol, reporting, and component-test Python modules remain responsibility markers; later milestones will populate those boundaries one vertical slice at a time.
+The CLI loads configuration and reuses shared services to build current manufacturing firmware, discover one ST-Link, program and verify the ELF through STM32CubeProgrammer, and reset the target. External commands are never passed through a shell. Protocol, reporting, and component-test Python modules remain responsibility markers for later milestones. Hardware-free tests replace only the external-command and programmer boundaries; real SWD success is not claimed without a board.

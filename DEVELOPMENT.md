@@ -2,11 +2,21 @@
 
 ## Current milestone
 
-Milestone 4 — Firmware build foundation: **complete in the working tree, pending owner review**.
+Milestone 5 — ST-Link/SWD flashing: **complete in the working tree, pending owner review**.
 
-Stop here until the project owner reviews the changes and separately approves any commit and Milestone 5.
+Stop here until the project owner reviews the changes and separately approves any commit and Milestone 6.
 
 ## Completed
+
+### Milestone 5
+
+- Added reusable external-command, firmware-build, programmer-neutral flashing, STM32CubeProgrammer/ST-Link, and build-and-flash workflow boundaries.
+- Added `fc-test firmware build` with Release default and optional Debug profile while preserving CMake as the single build definition.
+- Added `fc-test firmware flash`, which builds by default and supports an explicit prebuilt ELF or ST-Link serial when deliberate selection is needed.
+- Extended `fc-test run` to load configuration, build current firmware, discover one probe, program and verify over SWD, and reset without assuming earlier commands ran.
+- Located STM32CubeProgrammer through an explicit environment override, `PATH`, or the documented macOS application locations.
+- Added deterministic zero/one/multiple-probe handling, 1 MHz connect-under-reset commands, bounded timeouts, shell-free arguments, and actionable failures without automatic mass erase, option-byte changes, or read-protection removal.
+- Added hardware-free tests for build sequencing, artifact validation, probe parsing and selection, shared workflow reuse, programming-before-reset, command construction, and clean error reporting.
 
 ### Milestone 4
 
@@ -62,6 +72,13 @@ Stop here until the project owner reviews the changes and separately approves an
 
 ## Important decisions
 
+- `firmware build`, `firmware flash`, and `run` call shared Python services rather than invoking one another as subprocesses. CMake remains the only firmware build definition, and Ninja keeps repeated builds incremental.
+- Normal `firmware flash` and every `run` build current firmware first. Only the explicit `firmware flash --firmware <ELF>` route bypasses compilation.
+- Release is the manufacturing default; Debug is an explicit operator choice. ELF is the canonical programming input because it carries linked addresses.
+- V1 automatically accepts exactly one ST-Link. Zero probes fail with connection guidance, multiple probes require `--probe-serial`, and an unknown requested serial lists what was discovered.
+- STM32CubeProgrammer is an external official tool invoked without a shell. This project does not implement the ST-Link or SWD wire protocols in Python.
+- A nonstandard STM32CubeProgrammer installation can be selected explicitly with `--programmer <path>`; this takes precedence over `STM32CUBE_PROGRAMMER_CLI`, `PATH`, and standard macOS application locations.
+- Programming uses SWD connect-under-reset at 1 MHz, verification is mandatory before reset, and potentially destructive recovery or security operations are never automatic.
 - CMake describes targets and generates the build graph; Ninja executes it. The canonical build remains IDE-independent.
 - Arm GNU Toolchain `15.3.rel1` is the tested complete bare-metal toolchain. Homebrew's similarly named `arm-none-eabi-gcc` formula is compiler-only and lacks newlib, so it is not sufficient for this project.
 - STM32CubeF4 is pinned by the repository's submodule pointer rather than downloaded implicitly during every configure. Only the CMSIS STM32F4 device package and STM32F4 HAL driver nested submodules are required.
@@ -81,7 +98,7 @@ Stop here until the project owner reviews the changes and separately approves an
 - `identity` is not a test or firmware capability. Session identity is required initialization data and must be persisted before component dispatch.
 - The first intended component test is `mcu_runtime`; discrete LED tests use the explicit `status_leds` name.
 - Firmware directories use `hardware_abstraction` and `board_support` to distinguish portable access interfaces from routed board definitions.
-- Milestone 1 modules are responsibility markers only. No placeholder silently claims that CLI, flashing, transport, reporting, STM32 build, or component behavior works.
+- At Milestone 1, modules were responsibility markers only and no placeholder claimed unimplemented behavior. Later milestones replace each marker with tested behavior at its boundary.
 - The current KiCad working tree is hardware truth for this milestone. It contains uncommitted owner changes, so its file hashes are recorded alongside the Git commit rather than pretending the commit alone identifies the reviewed design.
 - Hardware-derived pin mappings are documented separately from firmware choices. An alternate function is listed only when the intended interface selects it unambiguously; ambiguous choices remain open.
 - Local test results are ignored by default because they contain physical device identifiers. A tracked placeholder keeps the result directory available once the Milestone 1 skeleton is created.
@@ -90,12 +107,16 @@ Stop here until the project owner reviews the changes and separately approves an
 
 ## Validation performed
 
+- `./fc-test firmware build` successfully configured and incrementally built the real Release firmware from outside the firmware directory, returning the expected absolute ELF path.
+- `./fc-test firmware flash` and the integrated `./fc-test run --config configs/test/test-config-v001.json` both built first and then stopped with the same concise missing-STM32CubeProgrammer error and exit code 1, without a traceback or hardware access.
+- All 29 standard-library unit tests pass under the uv-managed Python 3.12 environment, including the original configuration/runner regressions and the build/flashing cases.
+- Python bytecode compilation succeeds for all board-tester implementation and test modules with warnings treated as errors in the unit suite.
 - Clean Debug and Release configurations build with CMake 4.4.2, Ninja 1.13.2, ARM GNU Toolchain 15.3.rel1/GCC 15.3.1, and STM32CubeF4 v1.28.3.
 - Both configurations compile project C with strict warnings as errors, link without unresolved symbols, and generate ELF, HEX, BIN, map, and IDE compile-command artifacts.
 - The Release image uses 3,508 bytes of Flash (0.33%) and reserves 2,584 bytes of RAM (1.97%, including the configured heap/stack allowance).
 - ELF inspection confirms a 32-bit little-endian ARM hard-float executable, vector table at `0x08000000`, Thumb reset entry at `0x080002e1`, stack top at `0x20020000`, retained firmware metadata, and no unresolved symbols.
-- All 13 standard-library unit tests pass under the uv-managed Python 3.12 environment, covering successful initial loading, relative path resolution independent of working directory, ordered enabled/disabled behavior, malformed JSON, UUID version/canonical form, unsupported and duplicate test types, missing board references, unknown fields, unsupported board schema versions, revision consistency, exact CLI output, and clean CLI error reporting.
-- The repository-root `./fc-test run --config configs/test/test-config-v001.json` command loads both configurations and prints the six enabled tests in their configured order without accessing hardware.
+- The original 13 configuration/runner tests cover successful initial loading, relative path resolution independent of working directory, ordered enabled/disabled behavior, malformed JSON, UUID version/canonical form, unsupported and duplicate test types, missing board references, unknown fields, unsupported board schema versions, revision consistency, exact CLI output, and clean CLI error reporting.
+- At Milestone 3, the repository-root `./fc-test run --config configs/test/test-config-v001.json` command loaded both configurations and printed the six enabled tests without hardware access. Milestone 5 now continues into build and programmer preflight.
 - Both initial configuration files parse as valid JSON, and Git whitespace validation passes.
 - `uv sync --project board_tester` installed managed Python 3.12.12, created the ignored project environment, built the editable package, and generated the locked environment successfully.
 - `uv run --project board_tester fc-test` and the repository-root `./fc-test` bootstrap produced identical startup output for the same valid relative path.
@@ -113,6 +134,7 @@ Stop here until the project owner reviews the changes and separately approves an
 
 ## Open issues and assumptions
 
+- STM32CubeProgrammer is not installed on this Mac, and no ST-Link or Flight Computer board is available. Discovery, real programming, verification, and reset therefore remain hardware/tool acceptance items despite full mocked boundary coverage.
 - Homebrew Python was upgraded from 3.14.6 to 3.14.7, but `pyexpat`, `venv`, and pip bootstrapping still fail on macOS 26.2 because the bottle expects an Expat symbol absent from that OS release. This is a known Homebrew/macOS issue; macOS 26.3 or later is the supported system-level fix. The uv-managed project environment is unaffected.
 - Hardware is not currently available. HSE startup, 168 MHz operation, application-loop execution, and SWD flashing remain on-board validation items rather than claimed results.
 - Choose and document the BMI270 MCU SPI instance. PB3/PB4/PB5 support more than one SPI alternate-function mapping; the routed hardware does not itself select one.
@@ -124,4 +146,4 @@ Stop here until the project owner reviews the changes and separately approves an
 
 ## Next milestone
 
-Milestone 5 will add computer-side STM32CubeProgrammer/ST-Link discovery, firmware programming, verification, reset, and actionable tool/probe errors. Its implementation can begin without hardware, but successful SWD programming and reset cannot be accepted until a board is available.
+Milestone 6 will add USB CDC device initialization, computer-side port discovery and connection, and newline framing. It can be designed and unit-tested without hardware, but enumeration and end-to-end transport acceptance require a board.

@@ -30,7 +30,7 @@ Board configuration describes physical hardware. Test configuration holds a UUID
 
 ## Current state
 
-Milestone 4 is complete in the working tree, pending review. The project now builds Debug and Release STM32F405RGT6 manufacturing firmware from a pinned STM32CubeF4 foundation. Hardware execution remains unverified because a board is not currently available.
+Milestone 5 is complete in the working tree, pending review. The board tester now provides shared build and STM32CubeProgrammer/ST-Link flashing workflows. A normal `fc-test run` loads configuration, builds current Release firmware, discovers one ST-Link, programs and verifies the ELF over SWD, and resets the target. Physical flashing remains unverified because STM32CubeProgrammer and hardware are not currently available.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the handoff state, [ROADMAP.md](ROADMAP.md) for planned milestones, [docs/repository-architecture.md](docs/repository-architecture.md) for responsibility boundaries, and [docs/hardware-reference.md](docs/hardware-reference.md) for the reviewed hardware interface.
 
@@ -42,6 +42,7 @@ Synchronize the uv-managed development environment, then run the standard consol
 
 ```bash
 uv sync --project board_tester
+uv run --project board_tester fc-test firmware build
 uv run --project board_tester fc-test run --config configs/test/test-config-v001.json
 ```
 
@@ -51,7 +52,17 @@ Or use the repository-local bootstrap, which delegates to the same uv project an
 ./fc-test run --config configs/test/test-config-v001.json
 ```
 
-Both routes call `fc_test.main:main` in the locked uv environment.
+Build and flash can also be invoked independently:
+
+```bash
+./fc-test firmware build
+./fc-test firmware build --profile debug
+./fc-test firmware flash
+./fc-test firmware flash --probe-serial <serial>
+./fc-test firmware flash --programmer /custom/path/STM32_Programmer_CLI
+```
+
+`firmware flash` and `run` build current Release firmware before flashing unless an explicit prebuilt ELF is supplied to `firmware flash`. Both flashing routes accept `--programmer <path>` when STM32CubeProgrammer is installed in a nonstandard location. All routes reuse the same Python build and programming services; they do not invoke one another as nested CLI commands.
 
 ## Supported hardware
 
