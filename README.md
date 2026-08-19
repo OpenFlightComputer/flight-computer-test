@@ -30,7 +30,7 @@ Board configuration describes physical hardware. Test configuration holds a UUID
 
 ## Current state
 
-Milestone 5 is complete in the working tree, pending review. The board tester now provides shared build and STM32CubeProgrammer/ST-Link flashing workflows. A normal `fc-test run` loads configuration, builds current Release firmware, discovers one ST-Link, programs and verifies the ELF over SWD, and resets the target. Physical flashing remains unverified because STM32CubeProgrammer and hardware are not currently available.
+Milestone 5 is complete and committed. The firmware half of Milestone 6 is implemented in the working tree for review: the manufacturing image now includes USB CDC device support and bounded newline framing. The computer-side USB connection remains deliberately unimplemented. Physical flashing and USB enumeration remain unverified because STM32CubeProgrammer and hardware are not currently available.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the handoff state, [ROADMAP.md](ROADMAP.md) for planned milestones, [docs/repository-architecture.md](docs/repository-architecture.md) for responsibility boundaries, and [docs/hardware-reference.md](docs/hardware-reference.md) for the reviewed hardware interface.
 

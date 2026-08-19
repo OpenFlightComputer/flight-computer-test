@@ -2,9 +2,21 @@
 
 ## Current milestone
 
-Milestone 5 — ST-Link/SWD flashing: **complete in the working tree, pending owner review**.
+Milestone 6 — USB CDC transport and newline framing: **firmware side complete in the working tree, pending owner review; board-tester side not started**.
 
-Stop here until the project owner reviews the changes and separately approves any commit and Milestone 6.
+Stop here until the project owner reviews the firmware changes and approves the board-tester side.
+
+## In progress
+
+### Milestone 6 — firmware side
+
+- Added the official pinned STM32CubeF4 USB Device core and CDC class to the manufacturing-firmware build with the required HAL PCD/low-level USB drivers.
+- Configured PA11/PA12 for OTG FS, PA9 VBUS sensing, bus-powered descriptors, static USB class storage, and the OTG FS interrupt at priority 6.
+- Added CMake-configurable `0xCAFE:0x4001` development-only VID/PID placeholders and explicit warnings that they are unassigned and unsuitable for distribution.
+- Added CDC descriptors without a serial-number descriptor; STM32 UID identity remains deferred to Milestone 7.
+- Added a 512-byte interrupt-to-main receive ring, two-line receive/transmit queues, asynchronous transmission completion, and observable bounded-drop counters without dynamic allocation.
+- Added LF framing with CRLF acceptance, a 4,096-byte maximum, discard-through-newline recovery, and native C tests for split packets, combined lines, maximum length, overflow, and recovery.
+- Left Python serial discovery, connection, `--port`, and integration into `fc-test run` untouched as requested.
 
 ## Completed
 
@@ -72,6 +84,11 @@ Stop here until the project owner reviews the changes and separately approves an
 
 ## Important decisions
 
+- Milestone 6 is split deliberately: firmware USB CDC and framing are reviewed before computer-side serial discovery and connection are implemented.
+- The default USB VID/PID is a configurable development placeholder, not an identity assigned to OpenFlightComputer. Distributed hardware requires an authorized VID/PID.
+- USB callbacks do bounded byte movement only. Newline assembly and outgoing scheduling run from the main application loop rather than the OTG FS interrupt.
+- CDC input accepts LF and CRLF, limits a line to 4,096 bytes, and discards a damaged/oversized line until the next LF so partial data cannot be mistaken for a command.
+
 - `firmware build`, `firmware flash`, and `run` call shared Python services rather than invoking one another as subprocesses. CMake remains the only firmware build definition, and Ninja keeps repeated builds incremental.
 - Normal `firmware flash` and every `run` build current firmware first. Only the explicit `firmware flash --firmware <ELF>` route bypasses compilation.
 - Release is the manufacturing default; Debug is an explicit operator choice. ELF is the canonical programming input because it carries linked addresses.
@@ -107,13 +124,18 @@ Stop here until the project owner reviews the changes and separately approves an
 
 ## Validation performed
 
+- The Milestone 6 firmware builds in both Debug and Release with the official pinned USB Device core, CDC class, HAL PCD, and low-level USB driver linked without unresolved symbols.
+- Native C tests exercise newline fragmentation across input chunks, multiple lines in one chunk, CRLF handling, the exact 4,096-byte limit, oversized-line rejection, and recovery at the following newline.
+- The Release image now uses 18,232 bytes of Flash and 26,372 bytes of statically allocated RAM, including bounded USB queues and the configured heap/stack allowance.
+- ELF inspection confirms `OTG_FS_IRQHandler`, the newline framer, USB descriptors, and CDC transport initialization are linked into the manufacturing image.
+- All 31 board-tester regression tests continue to pass; no Python serial dependency or computer-side USB behavior was introduced.
 - `./fc-test firmware build` successfully configured and incrementally built the real Release firmware from outside the firmware directory, returning the expected absolute ELF path.
 - `./fc-test firmware flash` and the integrated `./fc-test run --config configs/test/test-config-v001.json` both built first and then stopped with the same concise missing-STM32CubeProgrammer error and exit code 1, without a traceback or hardware access.
-- All 29 standard-library unit tests pass under the uv-managed Python 3.12 environment, including the original configuration/runner regressions and the build/flashing cases.
+- All 31 standard-library unit tests pass under the uv-managed Python 3.12 environment, including the original configuration/runner regressions and the build/flashing cases.
 - Python bytecode compilation succeeds for all board-tester implementation and test modules with warnings treated as errors in the unit suite.
 - Clean Debug and Release configurations build with CMake 4.4.2, Ninja 1.13.2, ARM GNU Toolchain 15.3.rel1/GCC 15.3.1, and STM32CubeF4 v1.28.3.
 - Both configurations compile project C with strict warnings as errors, link without unresolved symbols, and generate ELF, HEX, BIN, map, and IDE compile-command artifacts.
-- The Release image uses 3,508 bytes of Flash (0.33%) and reserves 2,584 bytes of RAM (1.97%, including the configured heap/stack allowance).
+- Before USB support, the Milestone 4 Release image used 3,508 bytes of Flash and reserved 2,584 bytes of RAM; current Milestone 6 figures are recorded above.
 - ELF inspection confirms a 32-bit little-endian ARM hard-float executable, vector table at `0x08000000`, Thumb reset entry at `0x080002e1`, stack top at `0x20020000`, retained firmware metadata, and no unresolved symbols.
 - The original 13 configuration/runner tests cover successful initial loading, relative path resolution independent of working directory, ordered enabled/disabled behavior, malformed JSON, UUID version/canonical form, unsupported and duplicate test types, missing board references, unknown fields, unsupported board schema versions, revision consistency, exact CLI output, and clean CLI error reporting.
 - At Milestone 3, the repository-root `./fc-test run --config configs/test/test-config-v001.json` command loaded both configurations and printed the six enabled tests without hardware access. Milestone 5 now continues into build and programmer preflight.
@@ -134,6 +156,8 @@ Stop here until the project owner reviews the changes and separately approves an
 
 ## Open issues and assumptions
 
+- `0xCAFE:0x4001` is only a configurable local-development USB identity and may collide with other devices. OpenFlightComputer needs an authorized VID/PID before distributing USB-enabled hardware.
+- USB enumeration, VBUS sensing through the board divider, endpoint transfer, disconnect/reconnect behavior, and host compatibility cannot be accepted until hardware is available.
 - STM32CubeProgrammer is not installed on this Mac, and no ST-Link or Flight Computer board is available. Discovery, real programming, verification, and reset therefore remain hardware/tool acceptance items despite full mocked boundary coverage.
 - Homebrew Python was upgraded from 3.14.6 to 3.14.7, but `pyexpat`, `venv`, and pip bootstrapping still fail on macOS 26.2 because the bottle expects an Expat symbol absent from that OS release. This is a known Homebrew/macOS issue; macOS 26.3 or later is the supported system-level fix. The uv-managed project environment is unaffected.
 - Hardware is not currently available. HSE startup, 168 MHz operation, application-loop execution, and SWD flashing remain on-board validation items rather than claimed results.

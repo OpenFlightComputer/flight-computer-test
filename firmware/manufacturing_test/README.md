@@ -2,7 +2,7 @@
 
 This bare-metal firmware is installed temporarily through ST-Link/SWD to exercise Flight Computer V1 hardware under computer-side control. It is not operational flight-control firmware.
 
-Milestone 4 provides a buildable STM32F405RGT6 foundation: official CMSIS startup/system code, the selected STM32 HAL modules, a board linker script, interrupt handlers, 16 MHz HSE clock configuration, and a stable debugger-visible application loop. It does not yet flash hardware, communicate over USB, or execute component tests.
+The firmware currently provides the STM32F405 foundation plus the firmware half of Milestone 6: USB OTG FS device support, CDC ACM enumeration, interrupt-driven packet transfer, bounded queues, and newline framing. It does not yet interpret protocol messages or execute component tests.
 
 ## Architecture
 
@@ -96,6 +96,43 @@ compile_commands.json
 
 The ELF contains debug/symbol information, HEX and BIN are flashable representations, the map explains linked memory placement, and `compile_commands.json` supplies IDE indexing.
 
+## USB development identity
+
+The default `0xCAFE:0x4001` VID/PID pair is an unassigned development placeholder. It is deliberately centralized in CMake, clearly reported during configuration, and must not be used for distributed hardware. Override the values when an assigned identity is available:
+
+```bash
+cmake --preset firmware-debug \
+  -DOPENFLIGHTCOMPUTER_USB_VID=0x1234 \
+  -DOPENFLIGHTCOMPUTER_USB_PID=0x0001 \
+  -DOPENFLIGHTCOMPUTER_USB_IDS_ARE_DEVELOPMENT=OFF
+```
+
+The device advertises `OpenFlightComputer Manufacturing Test` as a Full-Speed CDC ACM device. Its serial-number descriptor is intentionally absent until Milestone 7 introduces the STM32 factory UID as session identity. The configuration declares a bus-powered maximum of 500 mA.
+
+## USB transport
+
+PA11 and PA12 are configured as OTG FS D− and D+ on alternate function 10. PA9 provides VBUS sensing. USB interrupts run at NVIC priority 6 and enter the ST PCD and USB Device stacks; interrupt callbacks only move bytes and update completion state.
+
+The application loop performs the slower work:
+
+- received USB packets enter a 512-byte single-producer/single-consumer ring;
+- complete LF-terminated lines are assembled outside interrupt context;
+- CRLF is accepted by removing a trailing CR;
+- lines may contain at most 4,096 bytes;
+- oversized or receive-overflowed lines are discarded through the next newline;
+- two complete received lines and two outgoing lines can be queued;
+- outgoing lines gain exactly one LF terminator and remain stored until the asynchronous USB transfer completes.
+
+The protocol layer exposes complete lines but does not parse JSON or respond to commands yet.
+
+Run the hardware-independent framing tests with the computer's native C compiler:
+
+```bash
+cmake -S tests -B build/host-tests -G Ninja
+cmake --build build/host-tests
+ctest --test-dir build/host-tests --output-on-failure
+```
+
 ## Clock tree
 
 The board's 16 MHz crystal is used as the HSE source:
@@ -109,4 +146,4 @@ AHB runs at 168 MHz, APB1 at 42 MHz, and APB2 at 84 MHz. Flash latency is five w
 
 ## Hardware validation status
 
-Debug and Release images compile, link, and produce all artifacts without hardware. The vector table, reset entry, memory regions, metadata, and unresolved-symbol set have been inspected. Actual HSE startup, 168 MHz operation, stable loop execution, and SWD programming remain unverified until a board is available.
+Debug and Release images compile, link, and produce all artifacts without hardware. The vector table, reset entry, memory regions, metadata, and unresolved-symbol set have been inspected. Actual HSE startup, USB enumeration and transfer, stable loop execution, and SWD programming remain unverified until a board is available.

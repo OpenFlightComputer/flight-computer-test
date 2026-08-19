@@ -1,4 +1,5 @@
 #include "application.h"
+#include "usb_cdc_transport.h"
 
 #include "stm32f4xx.h"
 
@@ -10,6 +11,7 @@ void application_run(void)
     application_state = APPLICATION_STATE_READY;
 
     for (;;) {
+        usb_cdc_transport_process();
         application_loop_iterations++;
         __NOP();
     }

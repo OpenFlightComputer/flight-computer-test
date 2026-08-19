@@ -7,6 +7,7 @@ typedef enum {
     APPLICATION_STATE_BOOTING = 0,
     APPLICATION_STATE_READY = 1,
     APPLICATION_STATE_CLOCK_ERROR = 2,
+    APPLICATION_STATE_USB_ERROR = 3,
 } application_state_t;
 
 extern volatile application_state_t application_state;
