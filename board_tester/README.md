@@ -2,7 +2,7 @@
 
 This directory contains the computer-side OpenFlightComputer manufacturing and acceptance-test software.
 
-The package owns configuration loading, tooling checks, firmware building, and STM32CubeProgrammer/ST-Link flashing. USB protocol communication, operator interaction, component-test orchestration, and result persistence enter in later milestones.
+The package owns configuration loading, tooling checks, firmware building, STM32CubeProgrammer/ST-Link flashing, and USB CDC discovery, connection, and newline framing. Structured protocol messages, operator interaction, component-test orchestration, and result persistence enter in later milestones.
 
 Python versions, dependencies, and the development environment are managed by uv. The committed `.python-version` requests Python 3.12, `pyproject.toml` declares package metadata and compatibility, and `uv.lock` records the resolved environment. These files are complementary parts of one uv workflow rather than separate version managers.
 
@@ -19,7 +19,7 @@ The repository also provides a bootstrap that delegates to the same uv project:
 ./fc-test run --config configs/test/test-config-v001.json
 ```
 
-`run` does not depend on prior build or flash commands. It loads configuration, invokes the canonical CMake Release preset, discovers one ST-Link, programs and verifies the generated ELF, and resets the target before the future USB phase. The same services are independently available as:
+`run` does not depend on prior build or flash commands. It loads configuration, invokes the canonical CMake Release preset, discovers one ST-Link, programs and verifies the generated ELF, resets the target, waits for its USB CDC port, and opens the transport. The same build and flashing services are independently available as:
 
 ```bash
 ./fc-test firmware build
@@ -31,6 +31,14 @@ The repository also provides a bootstrap that delegates to the same uv project:
 
 `firmware flash --firmware <path.elf>` deliberately bypasses compilation for an explicitly supplied artifact. Otherwise flashing always builds first. Install STM32CubeProgrammer for flashing. Its executable is resolved in this order: the `--programmer <path>` command option, `STM32CUBE_PROGRAMMER_CLI`, `PATH`, then the standard macOS application locations. The `run` command accepts the same `--programmer` option.
 
-Zero probes, ambiguous multiple probes, programming failure, verification failure, reset failure, missing tools, and timeouts produce concise errors without Python tracebacks. Programming uses SWD connect-under-reset at 1 MHz, requires immediate verification, and never automatically mass-erases, changes option bytes, or disables protection.
+After reset, `run` polls for up to 10 seconds for exactly one serial port with the development VID/PID `CAFE:4001`. If the operating system reports an unexpected identity or more than one matching board is connected, select the device path explicitly:
+
+```bash
+./fc-test run --config configs/test/test-config-v001.json --port /dev/cu.usbmodem...
+```
+
+pyserial owns the portable operating-system serial access. The connection disables software and hardware flow control, closes deterministically, and carries bounded raw LF-terminated byte lines. JSON encoding and the first `START_TEST` exchange are intentionally deferred to Milestone 7.
+
+Zero probes, ambiguous multiple probes or USB ports, programming failure, verification failure, reset failure, missing tools, serial-open failures, and timeouts produce concise errors without Python tracebacks. Programming uses SWD connect-under-reset at 1 MHz, requires immediate verification, and never automatically mass-erases, changes option bytes, or disables protection.
 
 Device UID, MCU identity, board identity, firmware metadata, and capabilities are session-initialization data returned by `START_TEST`. They are validated and recorded before component dispatch and are deliberately not modeled as an `identity` component test.

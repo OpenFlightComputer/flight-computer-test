@@ -8,7 +8,9 @@ version = "0.0.0"
 description = "Computer-side manufacturing and acceptance-test controller for OpenFlightComputer boards"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pyserial>=3.5,<4",
+]
 
 [project.scripts]
 fc-test = "fc_test.main:main"

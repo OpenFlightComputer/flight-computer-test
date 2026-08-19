@@ -3,12 +3,15 @@ from __future__ import annotations
 import io
 import tempfile
 import unittest
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 from fc_test.firmware import FirmwareArtifact
 from fc_test.flashing.programmer import Probe, ProgrammingError
 from fc_test.flashing.workflow import FlashOutcome
+from fc_test.main import main
+from fc_test.protocol.connection import SerialPort, UsbDiscoveryError
 from fc_test.runner import run
 
 
@@ -17,6 +20,27 @@ INITIAL_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v001.json"
 
 
 class RunnerTests(unittest.TestCase):
+    def test_cli_forwards_explicit_usb_port(self) -> None:
+        with patch("fc_test.main.run", return_value=0) as runner:
+            exit_code = main(
+                [
+                    "run",
+                    "--config",
+                    str(INITIAL_TEST_CONFIG),
+                    "--port",
+                    "/dev/cu.explicit",
+                ]
+            )
+
+        self.assertEqual(exit_code, 0)
+        runner.assert_called_once_with(
+            INITIAL_TEST_CONFIG,
+            firmware_profile="release",
+            probe_serial=None,
+            programmer_path=None,
+            port="/dev/cu.explicit",
+        )
+
     def test_run_prints_loaded_configuration_summary(self) -> None:
         stdout = io.StringIO()
         workflow_calls: list[tuple[str, str | None, Path | None]] = []
@@ -31,8 +55,22 @@ class RunnerTests(unittest.TestCase):
                 probe=Probe("ABC123"),
             )
 
+        @contextmanager
+        def usb_connection(requested_port=None):
+            self.assertIsNone(requested_port)
+            connection = type(
+                "Connection",
+                (),
+                {"port": SerialPort("/dev/cu.usbmodem-test", 0xCAFE, 0x4001)},
+            )()
+            yield connection
+
         with redirect_stdout(stdout):
-            exit_code = run(INITIAL_TEST_CONFIG, firmware_workflow=workflow)
+            exit_code = run(
+                INITIAL_TEST_CONFIG,
+                firmware_workflow=workflow,
+                usb_connection_workflow=usb_connection,
+            )
 
         self.assertEqual(exit_code, 0)
         self.assertEqual(workflow_calls, [("release", None, None)])
@@ -67,8 +105,39 @@ class RunnerTests(unittest.TestCase):
             "Building and flashing firmware (Release)...\n"
             "Firmware: /build/manufacturing-test.elf\n"
             "ST-Link: ABC123\n"
-            "Programming, verification, and reset completed.\n",
+            "Programming, verification, and reset completed.\n"
+            "Waiting for USB CDC device...\n"
+            "USB CDC: /dev/cu.usbmodem-test\n"
+            "Transport ready.\n",
         )
+
+    def test_run_forwards_explicit_port_and_reports_usb_error(self) -> None:
+        stderr = io.StringIO()
+        requested_ports: list[str | Path | None] = []
+
+        def workflow(profile, *, probe_serial=None, programmer_path=None):
+            return FlashOutcome(
+                artifact=FirmwareArtifact(profile, Path("/build/firmware.elf")),
+                probe=Probe("ABC123"),
+            )
+
+        @contextmanager
+        def fail_usb(requested_port=None):
+            requested_ports.append(requested_port)
+            raise UsbDiscoveryError("requested port did not appear")
+            yield  # pragma: no cover
+
+        with redirect_stdout(io.StringIO()), redirect_stderr(stderr):
+            exit_code = run(
+                INITIAL_TEST_CONFIG,
+                port="/dev/cu.explicit",
+                firmware_workflow=workflow,
+                usb_connection_workflow=fail_usb,
+            )
+
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(requested_ports, ["/dev/cu.explicit"])
+        self.assertEqual(stderr.getvalue(), "fc-test: requested port did not appear\n")
 
     def test_run_reports_programming_error_without_traceback(self) -> None:
         stdout = io.StringIO()

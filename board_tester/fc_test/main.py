@@ -100,6 +100,11 @@ def build_parser() -> argparse.ArgumentParser:
     _add_profile_argument(run_parser)
     _add_probe_argument(run_parser)
     _add_programmer_argument(run_parser)
+    run_parser.add_argument(
+        "--port",
+        metavar="PATH",
+        help="select a USB CDC port instead of automatic VID/PID discovery",
+    )
 
     firmware_parser = commands.add_parser(
         "firmware",
@@ -144,6 +149,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             firmware_profile=profile,
             probe_serial=arguments.probe_serial,
             programmer_path=arguments.programmer,
+            port=arguments.port,
         )
 
     if arguments.firmware_command == "build":

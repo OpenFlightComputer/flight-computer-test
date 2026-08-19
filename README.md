@@ -30,7 +30,7 @@ Board configuration describes physical hardware. Test configuration holds a UUID
 
 ## Current state
 
-Milestone 5 is complete and committed. The firmware half of Milestone 6 is implemented in the working tree for review: the manufacturing image now includes USB CDC device support and bounded newline framing. The computer-side USB connection remains deliberately unimplemented. Physical flashing and USB enumeration remain unverified because STM32CubeProgrammer and hardware are not currently available.
+The firmware half of Milestone 6 is committed. The computer-side half is implemented in the working tree for review: `run` now continues from SWD reset into bounded USB CDC discovery and connection, with raw newline framing ready for the Milestone 7 message protocol. Physical flashing and USB enumeration remain unverified because STM32CubeProgrammer and hardware are not currently available.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the handoff state, [ROADMAP.md](ROADMAP.md) for planned milestones, [docs/repository-architecture.md](docs/repository-architecture.md) for responsibility boundaries, and [docs/hardware-reference.md](docs/hardware-reference.md) for the reviewed hardware interface.
 
@@ -60,9 +60,10 @@ Build and flash can also be invoked independently:
 ./fc-test firmware flash
 ./fc-test firmware flash --probe-serial <serial>
 ./fc-test firmware flash --programmer /custom/path/STM32_Programmer_CLI
+./fc-test run --config configs/test/test-config-v001.json --port /dev/cu.usbmodem...
 ```
 
-`firmware flash` and `run` build current Release firmware before flashing unless an explicit prebuilt ELF is supplied to `firmware flash`. Both flashing routes accept `--programmer <path>` when STM32CubeProgrammer is installed in a nonstandard location. All routes reuse the same Python build and programming services; they do not invoke one another as nested CLI commands.
+`firmware flash` and `run` build current Release firmware before flashing unless an explicit prebuilt ELF is supplied to `firmware flash`. Both flashing routes accept `--programmer <path>` when STM32CubeProgrammer is installed in a nonstandard location. After reset, `run` waits up to 10 seconds for the development USB identity `CAFE:4001`; use `--port <path>` to select a particular serial port or bypass VID/PID matching. All routes reuse the same Python build and programming services; they do not invoke one another as nested CLI commands.
 
 ## Supported hardware
 

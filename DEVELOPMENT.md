@@ -2,13 +2,22 @@
 
 ## Current milestone
 
-Milestone 6 — USB CDC transport and newline framing: **firmware side complete in the working tree, pending owner review; board-tester side not started**.
+Milestone 6 — USB CDC transport and newline framing: **firmware side committed; board-tester side complete in the working tree, pending owner review**.
 
-Stop here until the project owner reviews the firmware changes and approves the board-tester side.
+Stop here until the project owner reviews the uncommitted board-tester changes.
 
 ## In progress
 
-### Milestone 6 — firmware side
+### Milestone 6 — board-tester side
+
+- Added pyserial as the uv-managed serial dependency and locked version 3.5.
+- Added ten-second post-reset USB enumeration polling for the firmware's development `CAFE:4001` VID/PID and deterministic zero/one/multiple-device behavior.
+- Added `run --port <path>` to select an exact serial device and bypass VID/PID matching when required by the local installation or development identity.
+- Added an owned USB CDC connection with finite reads and writes, disabled flow control, actionable errors, partial-write handling, and guaranteed close behavior.
+- Added raw-byte LF framing with CRLF acceptance, a 4,096-byte maximum, fragmented and combined input support, ordered oversized-line rejection, and recovery at the following newline.
+- Extended `run` to discover and open USB CDC immediately after programming, verification, and reset without sending Milestone 7 messages yet.
+
+### Milestone 6 — firmware side (committed as `3258b72`)
 
 - Added the official pinned STM32CubeF4 USB Device core and CDC class to the manufacturing-firmware build with the required HAL PCD/low-level USB drivers.
 - Configured PA11/PA12 for OTG FS, PA9 VBUS sensing, bus-powered descriptors, static USB class storage, and the OTG FS interrupt at priority 6.
@@ -16,7 +25,6 @@ Stop here until the project owner reviews the firmware changes and approves the 
 - Added CDC descriptors without a serial-number descriptor; STM32 UID identity remains deferred to Milestone 7.
 - Added a 512-byte interrupt-to-main receive ring, two-line receive/transmit queues, asynchronous transmission completion, and observable bounded-drop counters without dynamic allocation.
 - Added LF framing with CRLF acceptance, a 4,096-byte maximum, discard-through-newline recovery, and native C tests for split packets, combined lines, maximum length, overflow, and recovery.
-- Left Python serial discovery, connection, `--port`, and integration into `fc-test run` untouched as requested.
 
 ## Completed
 
@@ -88,6 +96,9 @@ Stop here until the project owner reviews the firmware changes and approves the 
 - The default USB VID/PID is a configurable development placeholder, not an identity assigned to OpenFlightComputer. Distributed hardware requires an authorized VID/PID.
 - USB callbacks do bounded byte movement only. Newline assembly and outgoing scheduling run from the main application loop rather than the OTG FS interrupt.
 - CDC input accepts LF and CRLF, limits a line to 4,096 bytes, and discards a damaged/oversized line until the next LF so partial data cannot be mistaken for a command.
+- Computer-side framing remains raw bytes in Milestone 6. UTF-8/JSON messages and correlation belong to Milestone 7 rather than the serial transport.
+- `run` waits up to 10 seconds after reset for exactly one `CAFE:4001` device. An exact `--port` override bypasses VID/PID matching; multiple automatic matches require explicit selection.
+- pyserial provides portable enumeration and serial I/O, while the project owns selection policy, timeouts, connection lifetime, and framing.
 
 - `firmware build`, `firmware flash`, and `run` call shared Python services rather than invoking one another as subprocesses. CMake remains the only firmware build definition, and Ninja keeps repeated builds incremental.
 - Normal `firmware flash` and every `run` build current firmware first. Only the explicit `firmware flash --firmware <ELF>` route bypasses compilation.
@@ -128,7 +139,7 @@ Stop here until the project owner reviews the firmware changes and approves the 
 - Native C tests exercise newline fragmentation across input chunks, multiple lines in one chunk, CRLF handling, the exact 4,096-byte limit, oversized-line rejection, and recovery at the following newline.
 - The Release image now uses 18,232 bytes of Flash and 26,372 bytes of statically allocated RAM, including bounded USB queues and the configured heap/stack allowance.
 - ELF inspection confirms `OTG_FS_IRQHandler`, the newline framer, USB descriptors, and CDC transport initialization are linked into the manufacturing image.
-- All 31 board-tester regression tests continue to pass; no Python serial dependency or computer-side USB behavior was introduced.
+- All 45 board-tester tests pass under uv-managed Python 3.12, including USB discovery retries and selection, connection closure, fragmented/multiple/oversized framing, read timeout retention, partial writes, CLI/runner integration, and the 31 prior regressions.
 - `./fc-test firmware build` successfully configured and incrementally built the real Release firmware from outside the firmware directory, returning the expected absolute ELF path.
 - `./fc-test firmware flash` and the integrated `./fc-test run --config configs/test/test-config-v001.json` both built first and then stopped with the same concise missing-STM32CubeProgrammer error and exit code 1, without a traceback or hardware access.
 - All 31 standard-library unit tests pass under the uv-managed Python 3.12 environment, including the original configuration/runner regressions and the build/flashing cases.
@@ -170,4 +181,4 @@ Stop here until the project owner reviews the firmware changes and approves the 
 
 ## Next milestone
 
-Milestone 6 will add USB CDC device initialization, computer-side port discovery and connection, and newline framing. It can be designed and unit-tested without hardware, but enumeration and end-to-end transport acceptance require a board.
+After review and commit of the board-tester half, Milestone 7 will define structured protocol messages, implement `START_TEST`, validate and persist the initial device metadata, and create the initial report. End-to-end USB acceptance still requires a board.
