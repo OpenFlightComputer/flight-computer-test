@@ -9,7 +9,7 @@ Keep these boundaries explicit:
 - KiCad and manufacturing outputs in the hardware repository are hardware truth.
 - Board configuration describes physical hardware.
 - Test configuration defines ordered policy and acceptance limits.
-- The host owns orchestration, operator interaction, validation, and reporting.
+- The board tester owns orchestration, operator interaction, validation, and reporting.
 - Manufacturing firmware owns low-level access and component-test execution.
 - Component tests depend on small hardware abstractions rather than scattered STM32 HAL calls.
 

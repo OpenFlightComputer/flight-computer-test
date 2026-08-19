@@ -82,7 +82,7 @@ Signal names such as `GPS_RX` and `RP1_RX` appear to be named from the external 
 - The BMI270 is routed as a four-wire SPI device. PB3/PB4/PB5 can support multiple STM32 SPI alternate mappings, so firmware must select and document one consistently rather than infer it from the net names.
 - The microSD socket is routed in SPI mode through SPI1 pins and includes a dedicated card-detect signal.
 - USB-C D+/D− route to the STM32 OTG FS pins. CC1 and CC2 each have pull-down resistors. VBUS reaches PA9 through a divider/sense path rather than a direct net label.
-- The SWD header exposes the complete V1 programming set required by the host workflow.
+- The SWD header exposes the complete V1 programming set required by the board-tester workflow.
 - The red and green discrete LEDs require hardware review before Milestone 11. Both the schematic netlist and PCB connect D4/D5 pad 2 (`A`) to GND and pad 1 (`K`) toward the MCU through a resistor. That appears reversed for the standard KiCad LED symbol and cannot be solved merely by choosing active-high versus active-low firmware.
 - The WS2812 is powered from +5 V and takes 3.3 V MCU data through R24 with no level shifter shown. Validate the actual part's input-high threshold/noise margin during bring-up rather than assuming guaranteed logic compatibility.
 

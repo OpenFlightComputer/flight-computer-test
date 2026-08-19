@@ -1,0 +1,2 @@
+"""Manufacturing-firmware programming boundary."""
+

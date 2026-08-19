@@ -25,7 +25,7 @@ Development proceeds one accepted milestone at a time. The current status is rec
 - All onboard V1 component tests
 - Stronger configuration validation
 - Refined result schemas
-- Automated host unit tests
+- Automated board-tester unit tests
 
 ## Later
 
@@ -37,7 +37,7 @@ Development proceeds one accepted milestone at a time. The current status is rec
 - Automated fixtures
 - Web UI
 - CI/CD
-- Generated host/firmware protocol bindings
+- Generated board-tester/firmware protocol bindings
 - Configuration authoring tools
 - Historical result analysis and cross-run regression comparison
 
