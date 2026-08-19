@@ -4,6 +4,7 @@
 
 | Area | Owns | Must not own |
 | --- | --- | --- |
+| `board_tester/fc_test/configuration.py` | Configuration loading, models, and validation | Test execution and hardware access |
 | `board_tester/fc_test/runner.py` | End-to-end sequencing and initialization | Component-specific behavior |
 | `board_tester/fc_test/flashing/` | Installing manufacturing firmware | Communication, reports, or test policy |
 | `board_tester/fc_test/protocol/` | Connection, framing, and message correlation | Hardware behavior or acceptance limits |
@@ -25,6 +26,6 @@ After flashing and connecting, the board tester will send `START_TEST`. The resp
 
 Consequently there is no `identity` test package or capability. The first intended component test is `mcu_runtime`, which evaluates actual clock, timebase, and responsiveness behavior rather than rediscovering session metadata.
 
-## Milestone 1 boundary
+## Current implementation boundary
 
-The Python modules and firmware directories are responsibility markers only. They contain no CLI, configuration semantics, transport, flashing, report writer, STM32 build, or component behavior. Later milestones will populate one vertical slice at a time.
+The CLI and configuration subsystem are implemented without hardware dependencies. Firmware directories and the flashing, protocol, reporting, and component-test Python modules remain responsibility markers; later milestones will populate those boundaries one vertical slice at a time.

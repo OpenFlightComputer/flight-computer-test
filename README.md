@@ -26,11 +26,11 @@ The planned firmware dependency direction is protocol, application/core, compone
 
 The V1 protocol will use board-tester-initiated `START_TEST`, `RUN_COMPONENT_TEST`, and `STOP_COMPONENT_TEST` commands. Responses correlate through command IDs; asynchronous functional events and non-functional debug messages remain separate.
 
-Board configuration will describe physical hardware. Test configuration will hold a UUID, reference a board configuration, and define ordered tests, parameters, and acceptance limits. Every result will capture SHA-256 hashes of both exact files.
+Board configuration describes physical hardware. Test configuration holds a UUID, references a board configuration, and defines ordered tests, parameters, and acceptance limits. Configuration hashing is deliberately deferred.
 
 ## Current state
 
-Milestone 2 is complete in the working tree: the board tester accepts only `run --config`, validates that the supplied path is a file, and prints a startup summary. It does not read configuration contents or access hardware.
+Milestone 3 is complete in the working tree, pending review. The board tester loads and validates the initial board and test configurations, resolves their relationship, and prints the enabled test order without accessing hardware.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the handoff state, [ROADMAP.md](ROADMAP.md) for planned milestones, [docs/repository-architecture.md](docs/repository-architecture.md) for responsibility boundaries, and [docs/hardware-reference.md](docs/hardware-reference.md) for the reviewed hardware interface.
 
@@ -42,20 +42,20 @@ Synchronize the uv-managed development environment, then run the standard consol
 
 ```bash
 uv sync --project board_tester
-uv run --project board_tester fc-test run --config configs/test/<test-config>.json
+uv run --project board_tester fc-test run --config configs/test/test-config-v001.json
 ```
 
 Or use the repository-local bootstrap, which delegates to the same uv project and console entry point:
 
 ```bash
-./fc-test run --config configs/test/<test-config>.json
+./fc-test run --config configs/test/test-config-v001.json
 ```
 
-Both routes call `fc_test.main:main` in the locked uv environment. An actual test configuration will be added in Milestone 3.
+Both routes call `fc_test.main:main` in the locked uv environment.
 
 ## Supported hardware
 
-- Board: current Flight Computer V1 design; formal revision identifier still needs reconciliation
+- Board: Flight Computer V1, manufacturing revision 1.7 from schematic revision 0.1
 - MCU: STM32F405RGT6
 - Sensors: BMI270 and BMP388
 - Storage: microSD

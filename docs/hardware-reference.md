@@ -14,7 +14,7 @@ This document records the Milestone 0 inspection of the authoritative KiCad desi
 - KiCad export tool observed: Eeschema 10.0.4
 - Schematic title/revision: `First PCB`, revision `0.1`
 
-The hashes above identify the exact files inspected despite the dirty hardware working tree. Recalculate them before deriving the Milestone 3 board configuration if the KiCad design changes.
+The hashes above identify the exact files inspected despite the dirty hardware working tree. They are historical Milestone 0 evidence and are not part of the runtime configuration model.
 
 ## Test-relevant inventory
 
@@ -86,9 +86,9 @@ Signal names such as `GPS_RX` and `RP1_RX` appear to be named from the external 
 - The red and green discrete LEDs require hardware review before Milestone 11. Both the schematic netlist and PCB connect D4/D5 pad 2 (`A`) to GND and pad 1 (`K`) toward the MCU through a resistor. That appears reversed for the standard KiCad LED symbol and cannot be solved merely by choosing active-high versus active-low firmware.
 - The WS2812 is powered from +5 V and takes 3.3 V MCU data through R24 with no level shifter shown. Validate the actual part's input-high threshold/noise margin during bring-up rather than assuming guaranteed logic compatibility.
 
-## Revision and authority warning
+## Revision relationship
 
-The schematic title block revision (`0.1`) does not match the highest generated production filename observed (`flightcomputer_v1.7_*`). Those filenames are not sufficient authority to relabel the PCB. Resolve the intended public board revision with the owner before creating an immutable test configuration or publishing acceptance results.
+The owner confirmed that manufacturing revision `1.7` is the latest release and was generated from the schematic whose title block remains at revision `0.1`. Board configuration therefore identifies the board as revision `1.7` and records `0.1` separately as the source schematic revision.
 
 ## External MCU references
 

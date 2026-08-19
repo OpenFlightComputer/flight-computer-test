@@ -6,7 +6,7 @@ Development proceeds one accepted milestone at a time. The current status is rec
 
 1. Repository skeleton and architecture
 2. Minimal `fc-test run --config <path>` startup
-3. Configuration loading, validation, ordered tests, UUID checks, and SHA-256 hashing
+3. Configuration loading, validation, ordered tests, and UUID checks
 4. Buildable STM32F405 manufacturing-firmware foundation
 5. ST-Link/SWD flashing through STM32CubeProgrammer CLI
 6. USB CDC transport and newline framing
@@ -39,6 +39,7 @@ Development proceeds one accepted milestone at a time. The current status is rec
 - CI/CD
 - Generated board-tester/firmware protocol bindings
 - Configuration authoring tools
+- Deterministic board/test configuration hashing and result traceability
 - Historical result analysis and cross-run regression comparison
 
 ## Long term

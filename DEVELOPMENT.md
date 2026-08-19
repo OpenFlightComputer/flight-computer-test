@@ -2,11 +2,22 @@
 
 ## Current milestone
 
-Milestone 2 — Initial CLI startup: **complete**.
+Milestone 3 — Configuration loading and validation: **complete in the working tree, pending owner review**.
 
-Milestone 3 remains pending owner approval before implementation begins.
+Stop here until the project owner reviews the changes and separately approves any commit and Milestone 4.
 
 ## Completed
+
+### Milestone 3
+
+- Added typed board/test configuration models and dependency-free JSON loading.
+- Added strict top-level schema, required-field, UUID v4, supported-test, duplicate-test, enabled-flag, parameter-object, and referenced-file validation with source-oriented errors.
+- Resolved the board configuration path relative to the test configuration file rather than the operator's working directory.
+- Preserved the exact configured test order while providing a filtered enabled-test view.
+- Added the hardware-derived Flight Computer V1 board configuration, recording manufacturing revision 1.7 separately from source schematic revision 0.1 and leaving ambiguous firmware selections explicit.
+- Added immutable initial acceptance configuration `test-config-v001.json` without an identity component test.
+- Updated the hardware-free CLI summary to show board, revision, MCU, test configuration, UUID, and enabled test order.
+- Deferred configuration hashing by owner decision.
 
 ### Milestone 2
 
@@ -44,8 +55,11 @@ Milestone 3 remains pending owner approval before implementation begins.
 - The uv console command and repository bootstrap are two launch routes, not two CLI implementations. All parsing remains in `fc_test.main`.
 - `./fc-test` delegates to `uv run --project board_tester`, ensuring both launch routes use the pinned and locked environment rather than whichever Python happens to be first on `PATH`.
 - uv is the sole project-level Python version and environment manager. `.python-version` selects the interpreter, `pyproject.toml` provides standard project/build metadata, and `uv.lock` records uv's resolved environment; setuptools is only the declared package build backend.
-- Configuration paths remain relative in the startup display and are resolved by normal filesystem semantics from the operator's working directory; the bootstrap does not change directories.
-- Milestone 2 validates only that the supplied path exists and is a file. JSON parsing, schema validation, path resolution between configurations, and hashing remain in Milestone 3.
+- The CLI test-configuration path follows normal filesystem semantics from the operator's working directory; the referenced board path is resolved relative to that test configuration file.
+- Milestone 2 validates the supplied CLI path before Milestone 3 loads its JSON contents and resolves the referenced board file.
+- Configuration UUID identifies the logical immutable test procedure. Configuration hashes are not currently part of the runtime model and will be introduced later.
+- The test array is the sole ordering authority. Disabled definitions remain loaded in their original positions but are omitted from the enabled execution view.
+- Test and board configuration fields are intentionally strict at their defined schema boundaries so spelling mistakes fail with useful errors rather than becoming ignored policy.
 - Standard `argparse` usage errors return exit code 2; successful help and startup return exit code 0.
 - The computer-side software directory is named `board_tester` rather than the ambiguous `host` or `test_station`.
 - `identity` is not a test or firmware capability. Session identity is required initialization data and must be persisted before component dispatch.
@@ -60,6 +74,9 @@ Milestone 3 remains pending owner approval before implementation begins.
 
 ## Validation performed
 
+- All 13 standard-library unit tests pass under the uv-managed Python 3.12 environment, covering successful initial loading, relative path resolution independent of working directory, ordered enabled/disabled behavior, malformed JSON, UUID version/canonical form, unsupported and duplicate test types, missing board references, unknown fields, unsupported board schema versions, revision consistency, exact CLI output, and clean CLI error reporting.
+- The repository-root `./fc-test run --config configs/test/test-config-v001.json` command loads both configurations and prints the six enabled tests in their configured order without accessing hardware.
+- Both initial configuration files parse as valid JSON, and Git whitespace validation passes.
 - `uv sync --project board_tester` installed managed Python 3.12.12, created the ignored project environment, built the editable package, and generated the locked environment successfully.
 - `uv run --project board_tester fc-test` and the repository-root `./fc-test` bootstrap produced identical startup output for the same valid relative path.
 - CLI checks passed for no arguments, an unknown command, missing `--config`, a nonexistent path, a directory path, root help, and `run` help. Usage failures returned exit code 2 and valid/help cases returned 0.
@@ -79,7 +96,6 @@ Milestone 3 remains pending owner approval before implementation begins.
 
 - Homebrew Python was upgraded from 3.14.6 to 3.14.7, but `pyexpat`, `venv`, and pip bootstrapping still fail on macOS 26.2 because the bottle expects an Expat symbol absent from that OS release. This is a known Homebrew/macOS issue; macOS 26.3 or later is the supported system-level fix. The uv-managed project environment is unaffected.
 - Install CMake before the Milestone 4 firmware build foundation. The current Milestone 1 `CMakeLists.txt` is intentionally target-free and remains unexecuted locally because the tool is unavailable.
-- Reconcile the formal board revision before creating the Milestone 3 board configuration: the schematic title block says revision `0.1`, while generated production files include names through `flightcomputer_v1.7_*`.
 - Choose and document the BMI270 MCU SPI instance. PB3/PB4/PB5 support more than one SPI alternate-function mapping; the routed hardware does not itself select one.
 - Confirm whether PC10/PC11 (`RP1_RX`/`RP1_TX`) are intended to use UART4 or USART3 and document signal naming from both MCU and external-device perspectives.
 - Confirm the intended timer/output mode for PC6–PC9 ESC signals when motor-interface testing enters scope; it is explicitly outside V1.
@@ -89,4 +105,4 @@ Milestone 3 remains pending owner approval before implementation begins.
 
 ## Next milestone
 
-Milestone 3 will implement board/test configuration loading, referenced board-path resolution, UUID and basic schema validation, deterministic SHA-256 hashes, ordered enabled-test preservation, and the initial hardware-derived configuration files. It will not flash firmware, connect hardware, open serial communication, or execute component tests.
+Milestone 4 will create a reliably buildable STM32F405 manufacturing-test firmware foundation for the actual board. It must resolve required firmware peripheral choices, establish the toolchain/HAL/linker/startup foundation, and produce a deterministic build artifact, but it will not yet add automated flashing, USB protocol communication, or component-test behavior.

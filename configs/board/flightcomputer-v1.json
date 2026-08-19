@@ -1,0 +1,342 @@
+{
+  "schema_version": 1,
+  "name": "Flight Computer V1",
+  "board_id": "flightcomputer-v1",
+  "revision": "1.7",
+  "source": {
+    "manufacturing_revision": "1.7",
+    "schematic_title": "First PCB",
+    "schematic_revision": "0.1",
+    "kicad_project": "FlightComputer_V1.kicad_pro",
+    "schematic": "FlightComputer_V1.kicad_sch",
+    "pcb": "FlightComputer_V1.kicad_pcb"
+  },
+  "mcu": {
+    "reference": "U5",
+    "model": "STM32F405RGT6",
+    "schematic_value": "STM32F405RGTx",
+    "package": "LQFP-64"
+  },
+  "components": {
+    "imu": {
+      "reference": "U1",
+      "model": "BMI270",
+      "interface": "imu_spi",
+      "chip_select": "PD2",
+      "interrupt_1": "PC12",
+      "interrupt_2": "PB6"
+    },
+    "barometer": {
+      "reference": "U3",
+      "model": "BMP388",
+      "interface": "barometer_i2c",
+      "csb_strap": "+3V3",
+      "sdo_strap": "GND",
+      "interrupt": null
+    },
+    "sd_card": {
+      "reference": "Card1",
+      "model": "XKTF-015-N",
+      "interface": "sd_spi",
+      "chip_select": "PC4",
+      "card_detect": "PC5"
+    },
+    "status_leds": {
+      "red": {
+        "reference": "D4",
+        "model": "LED_RED",
+        "pin": "PB13"
+      },
+      "green": {
+        "reference": "D5",
+        "model": "LED_GREEN",
+        "pin": "PB14"
+      }
+    },
+    "rgb_led": {
+      "reference": "LED1",
+      "model": "WS2812B-B/W",
+      "pin": "PA1",
+      "supply": "+5V"
+    },
+    "usb": {
+      "reference": "USBC1",
+      "model": "TYPE-C-31-M-12",
+      "interface": "usb_otg_fs"
+    },
+    "debug": {
+      "reference": "J5",
+      "model": "Conn_01x05_Pin",
+      "interface": "swd"
+    },
+    "high_speed_clock": {
+      "reference": "Y1",
+      "model": "7B016000F01",
+      "input": "PH0",
+      "output": "PH1"
+    }
+  },
+  "buses": {
+    "imu_spi": {
+      "type": "spi",
+      "peripheral": null,
+      "selection_required": true,
+      "candidates": [
+        "SPI1_AF5",
+        "SPI3_AF6"
+      ],
+      "clock": "PB3",
+      "miso": "PB4",
+      "mosi": "PB5"
+    },
+    "barometer_i2c": {
+      "type": "i2c",
+      "peripheral": "I2C2_AF4",
+      "clock": "PB10",
+      "data": "PB11"
+    },
+    "sd_spi": {
+      "type": "spi",
+      "peripheral": "SPI1_AF5",
+      "clock": "PA5",
+      "miso": "PA6",
+      "mosi": "PA7"
+    },
+    "usb_otg_fs": {
+      "type": "usb",
+      "peripheral": "OTG_FS_AF10",
+      "vbus_sense": "PA9",
+      "data_minus": "PA11",
+      "data_plus": "PA12"
+    },
+    "swd": {
+      "type": "debug",
+      "data": "PA13",
+      "clock": "PA14",
+      "reset": "NRST"
+    }
+  },
+  "pins": {
+    "PA1": {
+      "net": "WS2812_DI",
+      "direction": "output",
+      "role": "rgb_led_data",
+      "mode": "GPIO_or_timer_TBD"
+    },
+    "PA2": {
+      "net": "GPS_RX",
+      "direction": "output",
+      "role": "gps_serial_to_receiver",
+      "mode": "USART2_TX_AF7"
+    },
+    "PA3": {
+      "net": "GPS_TX",
+      "direction": "input",
+      "role": "gps_serial_from_receiver",
+      "mode": "USART2_RX_AF7"
+    },
+    "PA4": {
+      "net": "VBAT_ADC",
+      "direction": "input",
+      "role": "battery_voltage_sense",
+      "mode": "ADC1_IN4"
+    },
+    "PA5": {
+      "net": "SD_SCK",
+      "direction": "output",
+      "role": "sd_spi_clock",
+      "mode": "SPI1_SCK_AF5"
+    },
+    "PA6": {
+      "net": "SD_MISO",
+      "direction": "input",
+      "role": "sd_spi_miso",
+      "mode": "SPI1_MISO_AF5"
+    },
+    "PA7": {
+      "net": "SD_MOSI",
+      "direction": "output",
+      "role": "sd_spi_mosi",
+      "mode": "SPI1_MOSI_AF5"
+    },
+    "PA9": {
+      "net": "Net-(U5-PA9)",
+      "direction": "input",
+      "role": "usb_vbus_sense",
+      "mode": "OTG_FS_VBUS_AF10"
+    },
+    "PA11": {
+      "net": "USB_DN",
+      "direction": "bidirectional",
+      "role": "usb_data_minus",
+      "mode": "OTG_FS_DM_AF10"
+    },
+    "PA12": {
+      "net": "USB_DP",
+      "direction": "bidirectional",
+      "role": "usb_data_plus",
+      "mode": "OTG_FS_DP_AF10"
+    },
+    "PA13": {
+      "net": "SWDIO",
+      "direction": "bidirectional",
+      "role": "swd_data",
+      "mode": "SWDIO_AF0"
+    },
+    "PA14": {
+      "net": "SWCLK",
+      "direction": "input",
+      "role": "swd_clock",
+      "mode": "SWCLK_AF0"
+    },
+    "PB0": {
+      "net": "CURR_ADC",
+      "direction": "input",
+      "role": "esc_current_sense",
+      "mode": "ADC1_IN8"
+    },
+    "PB3": {
+      "net": "IMU_SPI_SCK",
+      "direction": "output",
+      "role": "imu_spi_clock",
+      "mode": "SPI1_SCK_AF5_or_SPI3_SCK_AF6"
+    },
+    "PB4": {
+      "net": "IMU_SPI_MISO",
+      "direction": "input",
+      "role": "imu_spi_miso",
+      "mode": "SPI1_MISO_AF5_or_SPI3_MISO_AF6"
+    },
+    "PB5": {
+      "net": "IMU_SPI_MOSI",
+      "direction": "output",
+      "role": "imu_spi_mosi",
+      "mode": "SPI1_MOSI_AF5_or_SPI3_MOSI_AF6"
+    },
+    "PB6": {
+      "net": "IMU_INT2",
+      "direction": "input",
+      "role": "imu_interrupt_2",
+      "mode": "GPIO_EXTI"
+    },
+    "PB9": {
+      "net": "GPS_PPS",
+      "direction": "input",
+      "role": "gps_pulse_per_second",
+      "mode": "GPIO_EXTI_or_timer_capture_TBD"
+    },
+    "PB10": {
+      "net": "I2C_SCL",
+      "direction": "bidirectional_open_drain",
+      "role": "barometer_i2c_clock",
+      "mode": "I2C2_SCL_AF4"
+    },
+    "PB11": {
+      "net": "I2C_SDA",
+      "direction": "bidirectional_open_drain",
+      "role": "barometer_i2c_data",
+      "mode": "I2C2_SDA_AF4"
+    },
+    "PB13": {
+      "net": "LED_RED",
+      "direction": "output",
+      "role": "red_status_led",
+      "mode": "GPIO"
+    },
+    "PB14": {
+      "net": "LED_GREEN",
+      "direction": "output",
+      "role": "green_status_led",
+      "mode": "GPIO"
+    },
+    "PC4": {
+      "net": "SD_CS",
+      "direction": "output",
+      "role": "sd_spi_chip_select",
+      "mode": "GPIO"
+    },
+    "PC5": {
+      "net": "SD_DET",
+      "direction": "input",
+      "role": "sd_card_detect",
+      "mode": "GPIO_EXTI"
+    },
+    "PC6": {
+      "net": "ESC_M4",
+      "direction": "output",
+      "role": "esc_channel_4",
+      "mode": "TIM8_CH1_AF3_candidate"
+    },
+    "PC7": {
+      "net": "ESC_M3",
+      "direction": "output",
+      "role": "esc_channel_3",
+      "mode": "TIM8_CH2_AF3_candidate"
+    },
+    "PC8": {
+      "net": "ESC_M2",
+      "direction": "output",
+      "role": "esc_channel_2",
+      "mode": "TIM8_CH3_AF3_candidate"
+    },
+    "PC9": {
+      "net": "ESC_M1",
+      "direction": "output",
+      "role": "esc_channel_1",
+      "mode": "TIM8_CH4_AF3_candidate"
+    },
+    "PC10": {
+      "net": "RP1_RX",
+      "direction": "output",
+      "role": "receiver_serial_to_receiver",
+      "mode": "UART4_TX_AF8_or_USART3_TX_AF7"
+    },
+    "PC11": {
+      "net": "RP1_TX",
+      "direction": "input",
+      "role": "receiver_serial_from_receiver",
+      "mode": "UART4_RX_AF8_or_USART3_RX_AF7"
+    },
+    "PC12": {
+      "net": "IMU_INT1",
+      "direction": "input",
+      "role": "imu_interrupt_1",
+      "mode": "GPIO_EXTI"
+    },
+    "PD2": {
+      "net": "IMU_CS",
+      "direction": "output",
+      "role": "imu_spi_chip_select",
+      "mode": "GPIO"
+    },
+    "PH0": {
+      "net": "/HSE_IN",
+      "direction": "input",
+      "role": "high_speed_external_clock_input",
+      "mode": "OSC_IN"
+    },
+    "PH1": {
+      "net": "/HSE_OUT",
+      "direction": "output",
+      "role": "high_speed_external_clock_output",
+      "mode": "OSC_OUT"
+    },
+    "NRST": {
+      "net": "NRST",
+      "direction": "input_open_drain",
+      "role": "reset",
+      "mode": "reset"
+    },
+    "BOOT0": {
+      "net": "BOOT0",
+      "direction": "input",
+      "role": "boot_selection",
+      "mode": "boot_strap"
+    }
+  },
+  "known_hardware_constraints": [
+    "D4 and D5 schematic and PCB polarity appears reversed for the standard KiCad LED symbol and requires hardware confirmation before status LED testing.",
+    "LED1 is powered from +5V and receives 3.3V data without a level shifter; validate the input-high margin during bring-up.",
+    "The BMI270 SPI peripheral selection is not determined by routing and must be chosen consistently in firmware."
+  ]
+}

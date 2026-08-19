@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "name": "Flight Computer V1 Initial Acceptance",
+  "uuid": "ccc7d571-141e-4054-8e77-6ac3a97ababa",
+  "board_config": "../board/flightcomputer-v1.json",
+  "tests": [
+    {
+      "type": "mcu_runtime",
+      "enabled": true,
+      "parameters": {}
+    },
+    {
+      "type": "status_leds",
+      "enabled": true,
+      "parameters": {}
+    },
+    {
+      "type": "rgb_led",
+      "enabled": true,
+      "parameters": {}
+    },
+    {
+      "type": "imu",
+      "enabled": true,
+      "parameters": {}
+    },
+    {
+      "type": "barometer",
+      "enabled": true,
+      "parameters": {}
+    },
+    {
+      "type": "sd_card",
+      "enabled": true,
+      "parameters": {}
+    }
+  ]
+}
