@@ -30,7 +30,7 @@ Board configuration describes physical hardware. Test configuration holds a UUID
 
 ## Current state
 
-Milestone 3 is complete in the working tree, pending review. The board tester loads and validates the initial board and test configurations, resolves their relationship, and prints the enabled test order without accessing hardware.
+Milestone 4 is complete in the working tree, pending review. The project now builds Debug and Release STM32F405RGT6 manufacturing firmware from a pinned STM32CubeF4 foundation. Hardware execution remains unverified because a board is not currently available.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the handoff state, [ROADMAP.md](ROADMAP.md) for planned milestones, [docs/repository-architecture.md](docs/repository-architecture.md) for responsibility boundaries, and [docs/hardware-reference.md](docs/hardware-reference.md) for the reviewed hardware interface.
 

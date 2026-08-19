@@ -1,0 +1,3 @@
+[submodule "firmware/manufacturing_test/third_party/STM32CubeF4"]
+	path = firmware/manufacturing_test/third_party/STM32CubeF4
+	url = https://github.com/STMicroelectronics/STM32CubeF4.git

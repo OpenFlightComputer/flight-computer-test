@@ -2,11 +2,21 @@
 
 ## Current milestone
 
-Milestone 3 — Configuration loading and validation: **complete in the working tree, pending owner review**.
+Milestone 4 — Firmware build foundation: **complete in the working tree, pending owner review**.
 
-Stop here until the project owner reviews the changes and separately approves any commit and Milestone 4.
+Stop here until the project owner reviews the changes and separately approves any commit and Milestone 5.
 
 ## Completed
+
+### Milestone 4
+
+- Replaced the target-free skeleton with a CMake/Ninja cross-compilation project for STM32F405RGT6 using C11 and ARM hard-float Cortex-M4 settings.
+- Pinned official STM32CubeF4 `v1.28.3` as a Git submodule and initialized only the required CMSIS device and HAL driver revisions.
+- Added the STM32F405 startup path, 1 MiB Flash/128 KiB SRAM/64 KiB CCM linker map, minimal HAL configuration, core interrupt handlers, and newlib startup hooks.
+- Configured the board's 16 MHz HSE through PLLM 16, PLLN 336, PLLP 2, and PLLQ 7 for 168 MHz SYSCLK and the later 48 MHz USB clock.
+- Added a stable application loop with debugger-visible boot, ready, and clock-error states without relying on unresolved LED behavior.
+- Embedded firmware `0.1.0`, Git revision/dirty state, STM32CubeF4, and ARM compiler metadata without a nondeterministic build timestamp.
+- Added Debug and Release presets, IDE compile-command export, ELF/HEX/BIN/map generation, memory-usage output, dependency setup, clock, build, and hardware-validation documentation.
 
 ### Milestone 3
 
@@ -52,6 +62,12 @@ Stop here until the project owner reviews the changes and separately approves an
 
 ## Important decisions
 
+- CMake describes targets and generates the build graph; Ninja executes it. The canonical build remains IDE-independent.
+- Arm GNU Toolchain `15.3.rel1` is the tested complete bare-metal toolchain. Homebrew's similarly named `arm-none-eabi-gcc` formula is compiler-only and lacks newlib, so it is not sufficient for this project.
+- STM32CubeF4 is pinned by the repository's submodule pointer rather than downloaded implicitly during every configure. Only the CMSIS STM32F4 device package and STM32F4 HAL driver nested submodules are required.
+- The manufacturing firmware version has a single source in CMake. The configured header adds Git, STM32CubeF4, and compiler identities to a retained ELF metadata section.
+- HSE failure is a manufacturing fault. Clock initialization stops in an inspectable error state instead of silently hiding the fault with an HSI fallback.
+- No status LED is used as a heartbeat because the routed LED polarity still requires hardware confirmation; application state and loop counters can be inspected through a debugger later.
 - The uv console command and repository bootstrap are two launch routes, not two CLI implementations. All parsing remains in `fc_test.main`.
 - `./fc-test` delegates to `uv run --project board_tester`, ensuring both launch routes use the pinned and locked environment rather than whichever Python happens to be first on `PATH`.
 - uv is the sole project-level Python version and environment manager. `.python-version` selects the interpreter, `pyproject.toml` provides standard project/build metadata, and `uv.lock` records uv's resolved environment; setuptools is only the declared package build backend.
@@ -74,6 +90,10 @@ Stop here until the project owner reviews the changes and separately approves an
 
 ## Validation performed
 
+- Clean Debug and Release configurations build with CMake 4.4.2, Ninja 1.13.2, ARM GNU Toolchain 15.3.rel1/GCC 15.3.1, and STM32CubeF4 v1.28.3.
+- Both configurations compile project C with strict warnings as errors, link without unresolved symbols, and generate ELF, HEX, BIN, map, and IDE compile-command artifacts.
+- The Release image uses 3,508 bytes of Flash (0.33%) and reserves 2,584 bytes of RAM (1.97%, including the configured heap/stack allowance).
+- ELF inspection confirms a 32-bit little-endian ARM hard-float executable, vector table at `0x08000000`, Thumb reset entry at `0x080002e1`, stack top at `0x20020000`, retained firmware metadata, and no unresolved symbols.
 - All 13 standard-library unit tests pass under the uv-managed Python 3.12 environment, covering successful initial loading, relative path resolution independent of working directory, ordered enabled/disabled behavior, malformed JSON, UUID version/canonical form, unsupported and duplicate test types, missing board references, unknown fields, unsupported board schema versions, revision consistency, exact CLI output, and clean CLI error reporting.
 - The repository-root `./fc-test run --config configs/test/test-config-v001.json` command loads both configurations and prints the six enabled tests in their configured order without accessing hardware.
 - Both initial configuration files parse as valid JSON, and Git whitespace validation passes.
@@ -84,7 +104,6 @@ Stop here until the project owner reviews the changes and separately approves an
 - All required Milestone 1 directories and boundary files are present; no `identity` test directory exists.
 - `board_tester/pyproject.toml` parses and every Python skeleton module imports without bytecode side effects under the available Python 3.14.6 interpreter.
 - Milestone 1 imports were initially checked under the available Python 3.14.6 interpreter; Milestone 2 subsequently exercised the declared lower version family with isolated Python 3.12.12.
-- CMake is not currently installed or available on `PATH`, so the target-free firmware skeleton could not be configured in this environment. CMake is not required to produce an artifact until Milestone 4.
 - Git whitespace validation passes for the complete uncommitted Milestone 1 change set.
 - Both test/documentation repository baselines pass Git whitespace checks. Their `main` branches track the transferred organization remotes.
 - SSH remote access was verified for all three transferred repositories. The hardware repository's existing uncommitted KiCad work was preserved unchanged.
@@ -95,7 +114,7 @@ Stop here until the project owner reviews the changes and separately approves an
 ## Open issues and assumptions
 
 - Homebrew Python was upgraded from 3.14.6 to 3.14.7, but `pyexpat`, `venv`, and pip bootstrapping still fail on macOS 26.2 because the bottle expects an Expat symbol absent from that OS release. This is a known Homebrew/macOS issue; macOS 26.3 or later is the supported system-level fix. The uv-managed project environment is unaffected.
-- Install CMake before the Milestone 4 firmware build foundation. The current Milestone 1 `CMakeLists.txt` is intentionally target-free and remains unexecuted locally because the tool is unavailable.
+- Hardware is not currently available. HSE startup, 168 MHz operation, application-loop execution, and SWD flashing remain on-board validation items rather than claimed results.
 - Choose and document the BMI270 MCU SPI instance. PB3/PB4/PB5 support more than one SPI alternate-function mapping; the routed hardware does not itself select one.
 - Confirm whether PC10/PC11 (`RP1_RX`/`RP1_TX`) are intended to use UART4 or USART3 and document signal naming from both MCU and external-device perspectives.
 - Confirm the intended timer/output mode for PC6–PC9 ESC signals when motor-interface testing enters scope; it is explicitly outside V1.
@@ -105,4 +124,4 @@ Stop here until the project owner reviews the changes and separately approves an
 
 ## Next milestone
 
-Milestone 4 will create a reliably buildable STM32F405 manufacturing-test firmware foundation for the actual board. It must resolve required firmware peripheral choices, establish the toolchain/HAL/linker/startup foundation, and produce a deterministic build artifact, but it will not yet add automated flashing, USB protocol communication, or component-test behavior.
+Milestone 5 will add computer-side STM32CubeProgrammer/ST-Link discovery, firmware programming, verification, reset, and actionable tool/probe errors. Its implementation can begin without hardware, but successful SWD programming and reset cannot be accepted until a board is available.

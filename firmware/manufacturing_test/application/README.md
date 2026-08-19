@@ -1,6 +1,5 @@
 # Application
 
-The application layer will own firmware startup, session state, command dispatch, component lookup, the one-active-component rule, cleanup, and identity/capability reporting.
+This layer owns manufacturing-firmware lifecycle and state. Milestone 4 initializes HAL, delegates board clock setup, verifies `SystemCoreClock`, and enters a stable loop with debugger-visible state and iteration counters.
 
-Identity is part of `START_TEST` session initialization, not a registered component test.
-
+Protocol/session state and component dispatch will be added in later milestones. Component-specific behavior does not belong here.
