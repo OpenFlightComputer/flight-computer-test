@@ -14,6 +14,7 @@ Component-specific interaction and acceptance logic belongs in ``fc_test.tests``
 import sys
 from contextlib import AbstractContextManager
 from pathlib import Path
+from collections.abc import Callable
 from typing import Protocol
 
 from fc_test.configuration import ConfigurationError, load_configurations
@@ -26,10 +27,13 @@ from fc_test.protocol.connection import (
     open_usb_cdc,
 )
 from fc_test.protocol.messages import ProtocolMessageError, StartTestResponse
+from fc_test.protocol.component_session import run_component_test, stop_component_test
 from fc_test.protocol.session import FramedConnection, start_test
 from fc_test.reporting.json_report import ReportError, create_initial_report
 from fc_test.reporting.json_report import record_session_validation
+from fc_test.reporting.json_report import finalize_component_run, record_component_result
 from fc_test.session_validation import SessionValidation, validate_session
+from fc_test.tests.base import ComponentTestHandler, GenericComponentTestHandler
 
 
 class FirmwareWorkflow(Protocol):
@@ -60,6 +64,10 @@ class SessionValidationWriter(Protocol):
     def __call__(self, report_path: Path, validation: SessionValidation) -> None: ...
 
 
+class ComponentTestWorkflow(Protocol):
+    def __call__(self, connection, *, command_id: int, test_type: str, on_event): ...
+
+
 def run(
     configuration_path: Path,
     *,
@@ -73,6 +81,10 @@ def run(
     initial_report_writer: InitialReportWriter = create_initial_report,
     session_validator=validate_session,
     session_validation_writer: SessionValidationWriter = record_session_validation,
+    component_test_workflow: ComponentTestWorkflow = run_component_test,
+    handler_factory: Callable[[], ComponentTestHandler] = GenericComponentTestHandler,
+    component_result_writer=record_component_result,
+    component_run_finalizer=finalize_component_run,
 ) -> int:
     """Load config, flash the board, and establish its USB CDC transport."""
 
@@ -134,6 +146,58 @@ def run(
             report_path = initial_report_writer(configurations, response)
             validation = session_validator(configurations, response)
             session_validation_writer(report_path, validation)
+            if validation.passed:
+                for command_id, definition in enumerate(
+                    configurations.test.enabled_tests, start=2
+                ):
+                    handler = handler_factory()
+                    try:
+                        result = handler.run(
+                            connection,
+                            command_id=command_id,
+                            definition=definition,
+                            workflow=component_test_workflow,
+                        )
+                    except (ProtocolMessageError, UsbTransportError) as error:
+                        component_result_writer(
+                            report_path,
+                            test_type=definition.type,
+                            status="failed",
+                            details={"failure": str(error)},
+                        )
+                        raise
+                    except KeyboardInterrupt:
+                        stop_command_id = command_id + 1000
+                        try:
+                            stop_component_test(
+                                connection,
+                                command_id=stop_command_id,
+                                test_type=definition.type,
+                            )
+                            failure = "operator cancelled test"
+                        except (ProtocolMessageError, UsbTransportError) as error:
+                            failure = (
+                                "operator cancelled test; stop acknowledgement "
+                                f"not received: {error}"
+                            )
+                        component_result_writer(
+                            report_path,
+                            test_type=definition.type,
+                            status="stopped",
+                            details={"failure": failure},
+                        )
+                        print("fc-test: test run cancelled by operator", file=sys.stderr)
+                        return 130
+                    component_result_writer(
+                        report_path,
+                        test_type=definition.type,
+                        status=result.status,
+                        details=result.details,
+                    )
+                    if result.status != "passed":
+                        break
+                else:
+                    component_run_finalizer(report_path)
     except (UsbTransportError, ProtocolMessageError, ReportError) as error:
         print(f"fc-test: {error}", file=sys.stderr)
         return 1

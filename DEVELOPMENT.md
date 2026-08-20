@@ -4,17 +4,18 @@
 
 Milestone 7 — protocol foundation, `START_TEST`, metadata, and initial report creation: **complete and committed**.
 
-Milestone 8 — configuration and session capability validation: **implemented in the working tree, pending owner review**.
+Milestone 8 — configuration and session capability validation: **complete and committed as `b52cb6f`**.
+
+Milestone 9 — generic firmware component-test lifecycle: **implemented in the working tree, pending owner review**.
 
 ## In progress
 
-### Milestone 8 — configuration and session capability validation (pending owner review)
+### Milestone 9 — generic firmware component-test lifecycle (firmware side, pending owner review)
 
-- Added explicit, non-empty `test_capabilities` to the board configuration schema and populated the Flight Computer V1 board capability set.
-- Added a pre-build/pre-flash capability gate: every test definition in the selected test configuration, including disabled definitions, must be advertised by the selected board configuration.
-- Added post-`START_TEST` session validation for MCU and board identity plus board-to-firmware capability compatibility. Firmware may advertise extras but must include every board capability.
-- Added atomic report updates: a valid protocol response first creates the traceable `in_progress` report; a session incompatibility records its reasons, marks it `failed`, and stops before component dispatch.
-- Added configuration, session-validation, report-update, and runner regressions. Hardware acceptance remains unavailable without a board.
+- Added a static production component registry as the sole source of runnable component capabilities. It remains intentionally empty until the first real component implementation is added.
+- Added one active-test slot with non-blocking `start`, repeated main-loop `process`, immediate cleanup `stop`, and no queue for concurrent requests.
+- Added firmware support for `RUN_COMPONENT_TEST`, `STOP_COMPONENT_TEST`, `TEST_STARTED`, `TEST_EVENT`, `TEST_COMPLETED`, and `TEST_STOPPED`, including unknown, busy, and no-active-test errors.
+- Added native lifecycle tests with a fake component for active-state, event, completion, and stop behavior; Release firmware builds successfully.
 
 ## Milestone 8 validation
 

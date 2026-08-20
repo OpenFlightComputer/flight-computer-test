@@ -9,11 +9,15 @@ from uuid import UUID
 
 from fc_test.configuration import load_configurations
 from fc_test.protocol.messages import (
+    ComponentTestCompletion,
+    ComponentTestEvent,
     DeviceMetadata,
     FirmwareMetadata,
     ProtocolMessageError,
     StartTestResponse,
     decode_start_test_response,
+    decode_component_test_message,
+    encode_run_component_test,
     encode_start_test,
 )
 from fc_test.protocol.session import start_test
@@ -47,6 +51,25 @@ def response_line(*, command_id: int = 1) -> bytes:
 
 
 class MessageTests(unittest.TestCase):
+    def test_component_lifecycle_messages_are_correlated(self) -> None:
+        encoded = encode_run_component_test(command_id=2, test_type="rgb_led")
+        event = decode_component_test_message(
+            b'{"protocol_version":1,"type":"TEST_EVENT","command_id":2,'
+            b'"test_type":"rgb_led","event":"operator_confirmation_required"}',
+            expected_command_id=2,
+            expected_test_type="rgb_led",
+        )
+        completion = decode_component_test_message(
+            b'{"protocol_version":1,"type":"TEST_COMPLETED","command_id":2,'
+            b'"test_type":"rgb_led","status":"passed"}',
+            expected_command_id=2,
+            expected_test_type="rgb_led",
+        )
+
+        self.assertEqual(json.loads(encoded)["type"], "RUN_COMPONENT_TEST")
+        self.assertIsInstance(event, ComponentTestEvent)
+        self.assertEqual(event.event, "operator_confirmation_required")
+        self.assertEqual(completion, ComponentTestCompletion(2, "rgb_led", "passed"))
     def test_start_test_request_has_the_protocol_contract(self) -> None:
         test_uuid = UUID("ccc7d571-141e-4054-8e77-6ac3a97ababa")
 

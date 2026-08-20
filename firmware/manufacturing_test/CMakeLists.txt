@@ -168,11 +168,13 @@ target_compile_definitions(stm32cube_f4 PUBLIC
 
 add_executable(manufacturing_test
     application/application.c
+    application/component_test_runner.c
     application/firmware_metadata.c
     application/main.c
     application/runtime_hooks.c
     application/session_metadata.c
     application/session_protocol.c
+    components/component_registry.c
     board_support/flightcomputer_v1/stm32f4xx_it.c
     board_support/flightcomputer_v1/system_clock.c
     board_support/flightcomputer_v1/usb_device_port.c
@@ -186,6 +188,7 @@ add_executable(manufacturing_test
 target_include_directories(manufacturing_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/application"
     "${CMAKE_CURRENT_SOURCE_DIR}/board_support/flightcomputer_v1"
+    "${CMAKE_CURRENT_SOURCE_DIR}/components"
     "${CMAKE_CURRENT_SOURCE_DIR}/protocol"
     "${CMAKE_CURRENT_BINARY_DIR}/generated"
 )

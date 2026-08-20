@@ -76,6 +76,31 @@ static bool copy_test_uuid(
     return true;
 }
 
+static bool copy_test_type(
+    const char *line,
+    const jsmntok_t *token,
+    char destination[JSON_PROTOCOL_TEST_TYPE_CAPACITY]
+)
+{
+    const size_t length = (size_t)(token->end - token->start);
+
+    if (token->type != JSMN_STRING || length == 0U ||
+        length >= JSON_PROTOCOL_TEST_TYPE_CAPACITY ||
+        memchr(&line[token->start], '\\', length) != NULL) {
+        return false;
+    }
+    for (size_t index = 0U; index < length; index++) {
+        const char character = line[token->start + (int)index];
+        if (!((character >= 'a' && character <= 'z') ||
+              (character >= '0' && character <= '9') || character == '_')) {
+            return false;
+        }
+    }
+    memcpy(destination, &line[token->start], length);
+    destination[length] = '\0';
+    return true;
+}
+
 static bool append_format(
     char *destination,
     size_t capacity,
@@ -114,11 +139,13 @@ bool json_protocol_parse_request(
     bool type_seen = false;
     bool command_id_seen = false;
     bool test_uuid_seen = false;
+    bool test_type_seen = false;
     int token_count;
 
     request->type = JSON_PROTOCOL_REQUEST_INVALID;
     request->command_id = 0U;
     request->test_uuid[0] = '\0';
+    request->test_type[0] = '\0';
     jsmn_init(&parser);
     token_count = jsmn_parse(
         &parser,
@@ -127,7 +154,7 @@ bool json_protocol_parse_request(
         tokens,
         JSON_PROTOCOL_TOKEN_CAPACITY
     );
-    if (token_count != 9 || tokens[0].type != JSMN_OBJECT) {
+    if ((token_count != 7 && token_count != 9) || tokens[0].type != JSMN_OBJECT) {
         return false;
     }
 
@@ -146,8 +173,15 @@ bool json_protocol_parse_request(
             if (type_seen || value->type != JSMN_STRING) {
                 return false;
             }
-            request->type = token_equals(line, value, "START_TEST") ?
-                JSON_PROTOCOL_REQUEST_START_TEST : JSON_PROTOCOL_REQUEST_UNSUPPORTED;
+            if (token_equals(line, value, "START_TEST")) {
+                request->type = JSON_PROTOCOL_REQUEST_START_TEST;
+            } else if (token_equals(line, value, "RUN_COMPONENT_TEST")) {
+                request->type = JSON_PROTOCOL_REQUEST_RUN_COMPONENT_TEST;
+            } else if (token_equals(line, value, "STOP_COMPONENT_TEST")) {
+                request->type = JSON_PROTOCOL_REQUEST_STOP_COMPONENT_TEST;
+            } else {
+                request->type = JSON_PROTOCOL_REQUEST_UNSUPPORTED;
+            }
             type_seen = true;
         } else if (token_equals(line, key, "command_id")) {
             if (command_id_seen || !parse_positive_uint32(
@@ -161,12 +195,27 @@ bool json_protocol_parse_request(
                 return false;
             }
             test_uuid_seen = true;
+        } else if (token_equals(line, key, "test_type")) {
+            if (test_type_seen || !copy_test_type(line, value, request->test_type)) {
+                return false;
+            }
+            test_type_seen = true;
         } else {
             return false;
         }
     }
 
-    return version_seen && type_seen && command_id_seen && test_uuid_seen;
+    if (!version_seen || !type_seen || !command_id_seen) {
+        return false;
+    }
+    if (request->type == JSON_PROTOCOL_REQUEST_START_TEST) {
+        return token_count == 9 && test_uuid_seen && !test_type_seen;
+    }
+    if (request->type == JSON_PROTOCOL_REQUEST_RUN_COMPONENT_TEST) {
+        return token_count == 9 && test_type_seen && !test_uuid_seen;
+    }
+    return request->type == JSON_PROTOCOL_REQUEST_STOP_COMPONENT_TEST &&
+        token_count == 7 && !test_uuid_seen && !test_type_seen;
 }
 
 bool json_protocol_build_start_test_response(
@@ -208,7 +257,7 @@ bool json_protocol_build_start_test_response(
             &offset,
             "%s\"%s\"",
             index == 0U ? "" : ",",
-            metadata->capabilities[index]
+            metadata->capability_at(index)
         )) {
             return false;
         }
@@ -235,6 +284,63 @@ bool json_protocol_build_error_response(
         "\"error\":\"%s\"}",
         (unsigned long)command_id,
         error_code
+    );
+
+    if (written < 0 || (size_t)written >= capacity) {
+        return false;
+    }
+    *length = (size_t)written;
+    return true;
+}
+
+bool json_protocol_build_test_response(
+    const char *response_type,
+    uint32_t command_id,
+    const char *test_type,
+    const char *status,
+    char *destination,
+    size_t capacity,
+    size_t *length
+)
+{
+    const int written = snprintf(
+        destination,
+        capacity,
+        "{\"protocol_version\":1,\"type\":\"%s\",\"command_id\":%lu,"
+        "\"test_type\":\"%s\",\"status\":\"%s\"}",
+        response_type,
+        (unsigned long)command_id,
+        test_type,
+        status
+    );
+
+    if (written < 0 || (size_t)written >= capacity) {
+        return false;
+    }
+    *length = (size_t)written;
+    return true;
+}
+
+bool json_protocol_build_test_event(
+    uint32_t command_id,
+    const char *test_type,
+    const char *event,
+    char *destination,
+    size_t capacity,
+    size_t *length
+)
+{
+    if (test_type == NULL || event == NULL) {
+        return false;
+    }
+    const int written = snprintf(
+        destination,
+        capacity,
+        "{\"protocol_version\":1,\"type\":\"TEST_EVENT\","
+        "\"command_id\":%lu,\"test_type\":\"%s\",\"event\":\"%s\"}",
+        (unsigned long)command_id,
+        test_type,
+        event
     );
 
     if (written < 0 || (size_t)written >= capacity) {

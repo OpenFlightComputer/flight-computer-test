@@ -10,6 +10,7 @@ volatile uint32_t application_loop_iterations = 0U;
 void application_run(void)
 {
     application_state = APPLICATION_STATE_READY;
+    session_protocol_initialize();
 
     for (;;) {
         usb_cdc_transport_process();

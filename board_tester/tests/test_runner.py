@@ -13,12 +13,14 @@ from fc_test.flashing.workflow import FlashOutcome
 from fc_test.main import main
 from fc_test.protocol.connection import SerialPort, UsbDiscoveryError
 from fc_test.protocol.messages import (
+    ComponentTestCompletion,
     DeviceMetadata,
     FirmwareMetadata,
     StartTestResponse,
 )
 from fc_test.protocol.messages import ProtocolMessageError
 from fc_test.runner import run
+from fc_test.tests.base import GenericComponentTestHandler
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -99,6 +101,14 @@ class RunnerTests(unittest.TestCase):
                     "/results/session.json"
                 ),
                 session_validation_writer=lambda _report_path, _validation: None,
+                component_test_workflow=lambda _connection, *, command_id, test_type, on_event: ComponentTestCompletion(
+                    command_id, test_type, "passed"
+                ),
+                handler_factory=lambda: GenericComponentTestHandler(
+                    output=lambda _message: None
+                ),
+                component_result_writer=lambda *_arguments, **_keywords: None,
+                component_run_finalizer=lambda *_arguments, **_keywords: None,
             )
 
         self.assertEqual(exit_code, 0)

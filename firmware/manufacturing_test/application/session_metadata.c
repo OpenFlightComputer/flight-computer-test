@@ -1,6 +1,7 @@
 #include "session_metadata.h"
 
 #include "board_metadata.h"
+#include "component_registry.h"
 #include "firmware_metadata.h"
 
 #include "stm32f4xx.h"
@@ -33,6 +34,6 @@ void session_metadata_read(session_metadata_t *metadata)
     metadata->board_revision = OPENFLIGHTCOMPUTER_BOARD_REVISION;
     metadata->firmware_version = firmware_version;
     metadata->firmware_git_revision = firmware_git_revision;
-    metadata->capabilities = NULL;
-    metadata->capability_count = 0U;
+    metadata->capability_at = component_registry_capability_at;
+    metadata->capability_count = component_registry_capability_count();
 }

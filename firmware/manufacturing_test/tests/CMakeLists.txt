@@ -40,3 +40,22 @@ target_compile_options(test_json_protocol PRIVATE
 )
 
 add_test(NAME json_protocol COMMAND test_json_protocol)
+
+add_executable(test_component_test_runner
+    test_component_test_runner.c
+    ../application/component_test_runner.c
+    ../components/component_registry.c
+)
+
+target_include_directories(test_component_test_runner PRIVATE
+    ../application
+    ../components
+)
+target_compile_options(test_component_test_runner PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Werror
+)
+
+add_test(NAME component_test_runner COMMAND test_component_test_runner)

@@ -13,7 +13,7 @@ typedef struct {
     const char *board_revision;
     const char *firmware_version;
     const char *firmware_git_revision;
-    const char *const *capabilities;
+    const char *(*capability_at)(size_t index);
     size_t capability_count;
 } session_metadata_t;
 

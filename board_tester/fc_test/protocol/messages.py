@@ -40,6 +40,20 @@ class StartTestResponse:
     capabilities: tuple[str, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class ComponentTestEvent:
+    command_id: int
+    test_type: str
+    event: str
+
+
+@dataclass(frozen=True, slots=True)
+class ComponentTestCompletion:
+    command_id: int
+    test_type: str
+    status: str
+
+
 def encode_start_test(*, command_id: int, test_uuid: UUID) -> bytes:
     """Encode the first board-tester initiated protocol command."""
 
@@ -52,6 +66,27 @@ def encode_start_test(*, command_id: int, test_uuid: UUID) -> bytes:
             "command_id": command_id,
             "test_uuid": str(test_uuid),
         },
+        separators=(",", ":"),
+    ).encode("ascii")
+
+
+def encode_run_component_test(*, command_id: int, test_type: str) -> bytes:
+    """Encode a request to start one firmware component test."""
+
+    _validate_command_id(command_id)
+    _validate_test_type(test_type, "test_type")
+    return json.dumps(
+        {"protocol_version": PROTOCOL_VERSION, "type": "RUN_COMPONENT_TEST",
+         "command_id": command_id, "test_type": test_type}, separators=(",", ":")
+    ).encode("ascii")
+
+
+def encode_stop_component_test(*, command_id: int) -> bytes:
+    """Encode a request to stop the single active firmware component test."""
+
+    _validate_command_id(command_id)
+    return json.dumps(
+        {"protocol_version": PROTOCOL_VERSION, "type": "STOP_COMPONENT_TEST", "command_id": command_id},
         separators=(",", ":"),
     ).encode("ascii")
 
@@ -150,6 +185,71 @@ def decode_start_test_response(
         ),
         capabilities=tuple(capabilities),
     )
+
+
+def decode_component_test_message(
+    line: bytes, *, expected_command_id: int, expected_test_type: str
+) -> ComponentTestEvent | ComponentTestCompletion | str:
+    """Decode one strictly correlated component lifecycle message."""
+
+    response = _decode_object(line)
+    if response.get("protocol_version") != PROTOCOL_VERSION:
+        raise ProtocolMessageError("response has an unsupported protocol_version")
+    if response.get("type") == "ERROR":
+        _require_keys(response, {"protocol_version", "type", "command_id", "error"}, "response")
+        command_id = _require_positive_integer(response, "command_id", "response")
+        if command_id != expected_command_id:
+            raise ProtocolMessageError("response command_id does not match active test")
+        raise ProtocolMessageError(f"device rejected component test: {_require_string(response, 'error', 'response')}")
+    message_type = _require_string(response, "type", "response")
+    if message_type == "TEST_EVENT":
+        _require_keys(response, {"protocol_version", "type", "command_id", "test_type", "event"}, "response")
+        return ComponentTestEvent(
+            _require_matching_command_id(response, expected_command_id),
+            _require_matching_test_type(response, expected_test_type),
+            _require_string(response, "event", "response"),
+        )
+    if message_type in {"TEST_STARTED", "TEST_COMPLETED", "TEST_STOPPED"}:
+        _require_keys(response, {"protocol_version", "type", "command_id", "test_type", "status"}, "response")
+        return ComponentTestCompletion(
+            _require_matching_command_id(response, expected_command_id),
+            _require_matching_test_type(response, expected_test_type),
+            _require_string(response, "status", "response"),
+        ) if message_type == "TEST_COMPLETED" else message_type
+    raise ProtocolMessageError(f"response type is not a component lifecycle message: {message_type}")
+
+
+def _decode_object(line: bytes) -> dict[str, Any]:
+    try:
+        return _require_object(json.loads(line.decode("utf-8")), "response")
+    except UnicodeDecodeError as error:
+        raise ProtocolMessageError("response is not valid UTF-8") from error
+    except json.JSONDecodeError as error:
+        raise ProtocolMessageError(f"response is not valid JSON: {error.msg}") from error
+
+
+def _validate_command_id(command_id: int) -> None:
+    if type(command_id) is not int or command_id <= 0:
+        raise ValueError("command_id must be a positive integer")
+
+
+def _validate_test_type(test_type: str, location: str) -> None:
+    if not isinstance(test_type, str) or not re.fullmatch(r"[a-z0-9_]+", test_type):
+        raise ValueError(f"{location} must be lowercase letters, digits, or underscores")
+
+
+def _require_matching_command_id(value: dict[str, Any], expected: int) -> int:
+    command_id = _require_positive_integer(value, "command_id", "response")
+    if command_id != expected:
+        raise ProtocolMessageError("response command_id does not match active test")
+    return command_id
+
+
+def _require_matching_test_type(value: dict[str, Any], expected: str) -> str:
+    test_type = _require_string(value, "test_type", "response")
+    if test_type != expected:
+        raise ProtocolMessageError("response test_type does not match active test")
+    return test_type
 
 
 def _require_object(value: Any, location: str) -> dict[str, Any]:

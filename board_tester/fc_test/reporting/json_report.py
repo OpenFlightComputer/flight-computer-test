@@ -121,6 +121,58 @@ def record_session_validation(
         raise ReportError(f"could not update report {report_path}: {error}") from error
 
 
+def record_component_result(
+    report_path: Path,
+    *,
+    test_type: str,
+    status: str,
+    details: dict[str, object],
+    now: datetime | None = None,
+) -> None:
+    """Append one terminal component result and finalize a failed run promptly."""
+
+    timestamp = now or datetime.now(UTC)
+    if timestamp.tzinfo is None:
+        raise ValueError("report timestamp must be timezone-aware")
+    timestamp_text = timestamp.astimezone(UTC).isoformat().replace("+00:00", "Z")
+    temporary_path = report_path.with_suffix(".json.tmp")
+    try:
+        with report_path.open("r", encoding="utf-8") as report_file:
+            report = json.load(report_file)
+        if not isinstance(report, dict) or not isinstance(report.get("results"), list):
+            raise ReportError(f"report has invalid result structure: {report_path}")
+        report["results"].append(
+            {"type": test_type, "status": status, "completed_at": timestamp_text,
+             **details}
+        )
+        if status != "passed":
+            report["status"] = "failed"
+            report["completed_at"] = timestamp_text
+        _write_report(report, report_path, temporary_path, mode="w")
+    except (OSError, json.JSONDecodeError) as error:
+        raise ReportError(f"could not update report {report_path}: {error}") from error
+
+
+def finalize_component_run(report_path: Path, *, now: datetime | None = None) -> None:
+    """Mark a run passed after every configured component test passed."""
+
+    timestamp = now or datetime.now(UTC)
+    if timestamp.tzinfo is None:
+        raise ValueError("report timestamp must be timezone-aware")
+    timestamp_text = timestamp.astimezone(UTC).isoformat().replace("+00:00", "Z")
+    temporary_path = report_path.with_suffix(".json.tmp")
+    try:
+        with report_path.open("r", encoding="utf-8") as report_file:
+            report = json.load(report_file)
+        if not isinstance(report, dict):
+            raise ReportError(f"report is not a JSON object: {report_path}")
+        report["status"] = "passed"
+        report["completed_at"] = timestamp_text
+        _write_report(report, report_path, temporary_path, mode="w")
+    except (OSError, json.JSONDecodeError) as error:
+        raise ReportError(f"could not update report {report_path}: {error}") from error
+
+
 def _write_report(
     report: dict[str, object], report_path: Path, temporary_path: Path, *, mode: str
 ) -> None:
