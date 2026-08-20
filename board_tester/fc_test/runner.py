@@ -28,6 +28,8 @@ from fc_test.protocol.connection import (
 from fc_test.protocol.messages import ProtocolMessageError, StartTestResponse
 from fc_test.protocol.session import FramedConnection, start_test
 from fc_test.reporting.json_report import ReportError, create_initial_report
+from fc_test.reporting.json_report import record_session_validation
+from fc_test.session_validation import SessionValidation, validate_session
 
 
 class FirmwareWorkflow(Protocol):
@@ -54,6 +56,10 @@ class InitialReportWriter(Protocol):
     def __call__(self, configurations, response: StartTestResponse) -> Path: ...
 
 
+class SessionValidationWriter(Protocol):
+    def __call__(self, report_path: Path, validation: SessionValidation) -> None: ...
+
+
 def run(
     configuration_path: Path,
     *,
@@ -65,6 +71,8 @@ def run(
     usb_connection_workflow: UsbConnectionWorkflow = open_usb_cdc,
     start_test_workflow: StartTestWorkflow = start_test,
     initial_report_writer: InitialReportWriter = create_initial_report,
+    session_validator=validate_session,
+    session_validation_writer: SessionValidationWriter = record_session_validation,
 ) -> int:
     """Load config, flash the board, and establish its USB CDC transport."""
 
@@ -124,9 +132,17 @@ def run(
                 connection, test_uuid=configurations.test.uuid
             )
             report_path = initial_report_writer(configurations, response)
+            validation = session_validator(configurations, response)
+            session_validation_writer(report_path, validation)
     except (UsbTransportError, ProtocolMessageError, ReportError) as error:
         print(f"fc-test: {error}", file=sys.stderr)
         return 1
     print(f"Test run created: {report_path}")
-    print("Session initialized.")
+    if not validation.passed:
+        print(
+            "fc-test: session validation failed: " + "; ".join(validation.failures),
+            file=sys.stderr,
+        )
+        return 1
+    print("Session initialized and validated.")
     return 0

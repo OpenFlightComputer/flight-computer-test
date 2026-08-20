@@ -2,13 +2,28 @@
 
 ## Current milestone
 
-Milestone 6 — USB CDC transport and newline framing: **complete and committed**.
+Milestone 7 — protocol foundation, `START_TEST`, metadata, and initial report creation: **complete and committed**.
 
-Milestone 7 — protocol foundation, `START_TEST`, metadata, and initial report creation: **implemented in the working tree, pending owner review**.
+Milestone 8 — configuration and session capability validation: **implemented in the working tree, pending owner review**.
 
 ## In progress
 
-### Milestone 7 — protocol foundation (pending owner review)
+### Milestone 8 — configuration and session capability validation (pending owner review)
+
+- Added explicit, non-empty `test_capabilities` to the board configuration schema and populated the Flight Computer V1 board capability set.
+- Added a pre-build/pre-flash capability gate: every test definition in the selected test configuration, including disabled definitions, must be advertised by the selected board configuration.
+- Added post-`START_TEST` session validation for MCU and board identity plus board-to-firmware capability compatibility. Firmware may advertise extras but must include every board capability.
+- Added atomic report updates: a valid protocol response first creates the traceable `in_progress` report; a session incompatibility records its reasons, marks it `failed`, and stops before component dispatch.
+- Added configuration, session-validation, report-update, and runner regressions. Hardware acceptance remains unavailable without a board.
+
+## Milestone 8 validation
+
+- All 59 board-tester tests pass under the uv-managed Python 3.12 environment, including the preflight gate, identity/capability mismatch handling, and report-then-fail runner behavior.
+- The default firmware capability list remains empty until individual component tests are implemented, so a physical Flight Computer V1 will deliberately fail the Milestone 8 post-session capability gate rather than run an unsupported test procedure.
+
+## Completed
+
+### Milestone 7 — protocol foundation (committed as `5525179`)
 
 - Added a fixed-buffer, MIT-licensed `jsmn` JSON tokenizer to the firmware without dynamic allocation.
 - Added strict protocol-version-1 `START_TEST` request parsing, malformed/unsupported request errors, and bounded `START_TEST_RESPONSE` serialization.
@@ -18,14 +33,12 @@ Milestone 7 — protocol foundation, `START_TEST`, metadata, and initial report 
 - Added an atomic initial `in_progress` report writer. Reports are created only after a valid `START_TEST_RESPONSE`, carry device/firmware/configuration metadata and an empty `results` array, and remain ignored locally because they include device identifiers.
 - Added native C JSON and Python session/report tests. Hardware acceptance remains unavailable without a board.
 
-## Milestone 7 validation
+#### Milestone 7 validation
 
 - Native host tests cover valid field-order-independent `START_TEST` parsing, malformed/unknown/version-invalid UUID rejection, and metadata/capability response generation.
-- All 52 board-tester tests pass under the uv-managed Python 3.12 environment, including JSON encoding/decoding, command-ID mismatch and device-error handling, send/read ordering, report content, and confirmation that a failed handshake creates no report.
+- All 52 board-tester tests passed under the uv-managed Python 3.12 environment, including JSON encoding/decoding, command-ID mismatch and device-error handling, send/read ordering, report content, and confirmation that a failed handshake creates no report.
 - The manufacturing firmware builds cleanly in Release and Debug with the strict C warning policy. The Release image uses 24,440 bytes of Flash and 30,800 bytes of static RAM; the Debug image uses 36,252 bytes of Flash and 30,800 bytes of static RAM.
 - End-to-end flashing, USB enumeration, JSON exchange, UID reading, and report creation remain hardware acceptance items because no board is available.
-
-## Completed
 
 ### Milestone 6 — board-tester side
 

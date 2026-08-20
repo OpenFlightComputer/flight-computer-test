@@ -51,6 +51,7 @@ class BoardConfiguration:
     revision: str
     source: dict[str, Any]
     mcu: McuConfiguration
+    test_capabilities: tuple[str, ...]
     components: dict[str, Any]
     buses: dict[str, Any]
     pins: dict[str, Any]
@@ -168,6 +169,7 @@ def load_board_configuration(path: Path) -> BoardConfiguration:
         "revision",
         "source",
         "mcu",
+        "test_capabilities",
         "components",
         "buses",
         "pins",
@@ -204,6 +206,37 @@ def load_board_configuration(path: Path) -> BoardConfiguration:
     mcu = _require_object(value, "mcu", path=path, location="board config")
     mcu_fields = {"reference", "model", "schematic_value", "package"}
     _require_exact_keys(mcu, required=mcu_fields, path=path, location="mcu")
+
+    test_capabilities = value["test_capabilities"]
+    if not isinstance(test_capabilities, list) or not test_capabilities:
+        raise ConfigurationError(
+            path, "board config.test_capabilities must be a non-empty array"
+        )
+    if not all(isinstance(capability, str) and capability.strip() for capability in test_capabilities):
+        raise ConfigurationError(
+            path,
+            "board config.test_capabilities must contain only non-empty strings",
+        )
+    duplicate_capabilities = sorted(
+        {
+            capability
+            for capability in test_capabilities
+            if test_capabilities.count(capability) > 1
+        }
+    )
+    if duplicate_capabilities:
+        raise ConfigurationError(
+            path,
+            "board config.test_capabilities contains duplicate value(s): "
+            + ", ".join(duplicate_capabilities),
+        )
+    unsupported_capabilities = sorted(set(test_capabilities) - SUPPORTED_TEST_TYPES)
+    if unsupported_capabilities:
+        raise ConfigurationError(
+            path,
+            "board config.test_capabilities contains unsupported value(s): "
+            + ", ".join(unsupported_capabilities),
+        )
 
     components = _require_object(
         value, "components", path=path, location="board config"
@@ -243,6 +276,7 @@ def load_board_configuration(path: Path) -> BoardConfiguration:
             ),
             package=_require_string(mcu, "package", path=path, location="mcu"),
         ),
+        test_capabilities=tuple(test_capabilities),
         components=components,
         buses=buses,
         pins=pins,
@@ -343,4 +377,15 @@ def load_configurations(test_configuration_path: Path) -> LoadedConfigurations:
 
     test = load_test_configuration(test_configuration_path)
     board = load_board_configuration(test.board_config_path)
+    unsupported_test_types = [
+        definition.type
+        for definition in test.tests
+        if definition.type not in board.test_capabilities
+    ]
+    if unsupported_test_types:
+        raise ConfigurationError(
+            test.path,
+            "test config defines type(s) not advertised by board "
+            f"{board.board_id}: {', '.join(unsupported_test_types)}",
+        )
     return LoadedConfigurations(test=test, board=board)

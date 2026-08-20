@@ -17,6 +17,14 @@
     "schematic_value": "STM32F405RGTx",
     "package": "LQFP-64"
   },
+  "test_capabilities": [
+    "mcu_runtime",
+    "status_leds",
+    "rgb_led",
+    "imu",
+    "barometer",
+    "sd_card"
+  ],
   "components": {
     "imu": {
       "reference": "U1",

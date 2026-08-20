@@ -26,11 +26,11 @@ The planned firmware dependency direction is protocol, application/core, compone
 
 The V1 protocol will use board-tester-initiated `START_TEST`, `RUN_COMPONENT_TEST`, and `STOP_COMPONENT_TEST` commands. Responses correlate through command IDs; asynchronous functional events and non-functional debug messages remain separate.
 
-Board configuration describes physical hardware. Test configuration holds a UUID, references a board configuration, and defines ordered tests, parameters, and acceptance limits. Configuration hashing is deliberately deferred.
+Board configuration describes physical hardware and explicitly declares its supported test capabilities. Test configuration holds a UUID, references a board configuration, and defines ordered tests, parameters, and acceptance limits. The tester rejects a test configuration that requests a capability absent from its selected board before it builds or flashes firmware. Configuration hashing is deliberately deferred.
 
 ## Current state
 
-Milestone 6 is complete and committed. Milestone 7 is implemented in the working tree for review: `run` now sends `START_TEST` after USB CDC connection, validates returned factory/device/firmware metadata, and creates an initial local result only after a successful response. Physical flashing and USB enumeration remain unverified because STM32CubeProgrammer and hardware are not currently available.
+Milestones 6 and 7 are complete and committed. Milestone 8 is implemented in the working tree for review: before flashing, `run` checks every configured test type against the selected board's declared capabilities. After a valid `START_TEST` response, it records a report and confirms that the firmware identifies the expected board and advertises every board capability. A mismatch marks that report failed and stops before component execution. Physical flashing and USB enumeration remain unverified because STM32CubeProgrammer and hardware are not currently available.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the handoff state, [ROADMAP.md](ROADMAP.md) for planned milestones, [docs/repository-architecture.md](docs/repository-architecture.md) for responsibility boundaries, and [docs/hardware-reference.md](docs/hardware-reference.md) for the reviewed hardware interface.
 

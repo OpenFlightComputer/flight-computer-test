@@ -8,6 +8,7 @@ from pathlib import Path
 
 from fc_test.configuration import LoadedConfigurations
 from fc_test.protocol.messages import StartTestResponse
+from fc_test.session_validation import SessionValidation
 
 
 class ReportError(RuntimeError):
@@ -73,11 +74,58 @@ def create_initial_report(
         directory.mkdir(parents=True, exist_ok=True)
         if report_path.exists():
             raise ReportError(f"report already exists: {report_path}")
-        with temporary_path.open("x", encoding="utf-8") as report_file:
-            json.dump(report, report_file, indent=2, sort_keys=True)
-            report_file.write("\n")
-            report_file.flush()
-        temporary_path.replace(report_path)
+        _write_report(report, report_path, temporary_path, mode="x")
     except OSError as error:
         raise ReportError(f"could not create report {report_path}: {error}") from error
     return report_path
+
+
+def record_session_validation(
+    report_path: Path,
+    validation: SessionValidation,
+    *,
+    now: datetime | None = None,
+) -> None:
+    """Persist the board-to-firmware compatibility result in an initial report."""
+
+    timestamp = now or datetime.now(UTC)
+    if timestamp.tzinfo is None:
+        raise ValueError("report timestamp must be timezone-aware")
+    timestamp_text = timestamp.astimezone(UTC).isoformat().replace("+00:00", "Z")
+    temporary_path = report_path.with_suffix(".json.tmp")
+
+    try:
+        with report_path.open("r", encoding="utf-8") as report_file:
+            report = json.load(report_file)
+        if not isinstance(report, dict):
+            raise ReportError(f"report is not a JSON object: {report_path}")
+
+        report["session_validation"] = {
+            "status": "passed" if validation.passed else "failed",
+            "validated_at": timestamp_text,
+            "board_capabilities": list(validation.board_capabilities),
+            "firmware_capabilities": list(validation.firmware_capabilities),
+            "failures": list(validation.failures),
+        }
+        if validation.passed:
+            report.pop("failure", None)
+        else:
+            report["status"] = "failed"
+            report["completed_at"] = timestamp_text
+            report["failure"] = {
+                "stage": "session_validation",
+                "message": "; ".join(validation.failures),
+            }
+        _write_report(report, report_path, temporary_path, mode="w")
+    except (OSError, json.JSONDecodeError) as error:
+        raise ReportError(f"could not update report {report_path}: {error}") from error
+
+
+def _write_report(
+    report: dict[str, object], report_path: Path, temporary_path: Path, *, mode: str
+) -> None:
+    with temporary_path.open(mode, encoding="utf-8") as report_file:
+        json.dump(report, report_file, indent=2, sort_keys=True)
+        report_file.write("\n")
+        report_file.flush()
+    temporary_path.replace(report_path)

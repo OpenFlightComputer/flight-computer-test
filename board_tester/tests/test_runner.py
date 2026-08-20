@@ -86,11 +86,19 @@ class RunnerTests(unittest.TestCase):
                         board_revision="1.7",
                     ),
                     firmware=FirmwareMetadata("0.1.0", "revision"),
-                    capabilities=(),
+                    capabilities=(
+                        "mcu_runtime",
+                        "status_leds",
+                        "rgb_led",
+                        "imu",
+                        "barometer",
+                        "sd_card",
+                    ),
                 ),
                 initial_report_writer=lambda _configurations, _response: Path(
                     "/results/session.json"
                 ),
+                session_validation_writer=lambda _report_path, _validation: None,
             )
 
         self.assertEqual(exit_code, 0)
@@ -131,7 +139,7 @@ class RunnerTests(unittest.TestCase):
             "USB CDC: /dev/cu.usbmodem-test\n"
             "Requesting START_TEST metadata...\n"
             "Test run created: /results/session.json\n"
-            "Session initialized.\n",
+            "Session initialized and validated.\n",
         )
 
     def test_run_forwards_explicit_port_and_reports_usb_error(self) -> None:
@@ -193,6 +201,53 @@ class RunnerTests(unittest.TestCase):
 
         self.assertEqual(exit_code, 1)
         self.assertEqual(report_calls, [])
+
+    def test_run_records_then_stops_on_session_validation_failure(self) -> None:
+        stderr = io.StringIO()
+        validation_updates: list[object] = []
+
+        def workflow(profile, *, probe_serial=None, programmer_path=None):
+            return FlashOutcome(
+                artifact=FirmwareArtifact(profile, Path("/build/firmware.elf")),
+                probe=Probe("ABC123"),
+            )
+
+        @contextmanager
+        def usb_connection(requested_port=None):
+            yield type(
+                "Connection",
+                (),
+                {"port": SerialPort("/dev/cu.board", 0xCAFE, 0x4001)},
+            )()
+
+        with redirect_stdout(io.StringIO()), redirect_stderr(stderr):
+            exit_code = run(
+                INITIAL_TEST_CONFIG,
+                firmware_workflow=workflow,
+                usb_connection_workflow=usb_connection,
+                start_test_workflow=lambda _connection, *, test_uuid: StartTestResponse(
+                    command_id=1,
+                    device=DeviceMetadata(
+                        uid="00112233445566778899AABB",
+                        mcu="STM32F405RGT6",
+                        board_id="flightcomputer-v1",
+                        board_name="Flight Computer V1",
+                        board_revision="1.7",
+                    ),
+                    firmware=FirmwareMetadata("0.1.0", "revision"),
+                    capabilities=(),
+                ),
+                initial_report_writer=lambda _configurations, _response: Path(
+                    "/results/session.json"
+                ),
+                session_validation_writer=lambda _report_path, validation: validation_updates.append(
+                    validation
+                ),
+            )
+
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(len(validation_updates), 1)
+        self.assertIn("firmware is missing board capability", stderr.getvalue())
 
     def test_run_reports_programming_error_without_traceback(self) -> None:
         stdout = io.StringIO()

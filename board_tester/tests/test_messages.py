@@ -17,7 +17,8 @@ from fc_test.protocol.messages import (
     encode_start_test,
 )
 from fc_test.protocol.session import start_test
-from fc_test.reporting.json_report import create_initial_report
+from fc_test.reporting.json_report import create_initial_report, record_session_validation
+from fc_test.session_validation import SessionValidation
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -127,4 +128,41 @@ class ReportingTests(unittest.TestCase):
         self.assertEqual(contents["status"], "in_progress")
         self.assertEqual(contents["device"]["uid"], response.device.uid)
         self.assertEqual(contents["firmware"]["git_revision"], "abc123")
+        self.assertEqual(contents["results"], [])
+
+    def test_failed_session_validation_updates_existing_report(self) -> None:
+        configurations = load_configurations(INITIAL_TEST_CONFIG)
+        response = StartTestResponse(
+            command_id=1,
+            device=DeviceMetadata(
+                uid="00112233445566778899AABB",
+                mcu="STM32F405RGT6",
+                board_id="flightcomputer-v1",
+                board_name="Flight Computer V1",
+                board_revision="1.7",
+            ),
+            firmware=FirmwareMetadata("0.1.0", "abc123"),
+            capabilities=(),
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = create_initial_report(
+                configurations,
+                response,
+                results_directory=Path(directory),
+                now=datetime(2026, 8, 20, 12, 34, 56, tzinfo=UTC),
+            )
+            record_session_validation(
+                path,
+                SessionValidation(
+                    board_capabilities=("imu",),
+                    firmware_capabilities=(),
+                    failures=("firmware is missing board capability/capabilities: imu",),
+                ),
+                now=datetime(2026, 8, 20, 12, 35, tzinfo=UTC),
+            )
+            contents = json.loads(path.read_text(encoding="utf-8"))
+
+        self.assertEqual(contents["status"], "failed")
+        self.assertEqual(contents["failure"]["stage"], "session_validation")
+        self.assertEqual(contents["session_validation"]["status"], "failed")
         self.assertEqual(contents["results"], [])

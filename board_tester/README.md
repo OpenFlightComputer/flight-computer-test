@@ -2,7 +2,7 @@
 
 This directory contains the computer-side OpenFlightComputer manufacturing and acceptance-test software.
 
-The package owns configuration loading, tooling checks, firmware building, STM32CubeProgrammer/ST-Link flashing, and USB CDC discovery, connection, and newline framing. Structured protocol messages, operator interaction, component-test orchestration, and result persistence enter in later milestones.
+The package owns configuration loading, tooling checks, firmware building, STM32CubeProgrammer/ST-Link flashing, USB CDC discovery/connection/newline framing, session validation, and incremental result persistence. Component-test orchestration enters in a later milestone.
 
 Python versions, dependencies, and the development environment are managed by uv. The committed `.python-version` requests Python 3.12, `pyproject.toml` declares package metadata and compatibility, and `uv.lock` records the resolved environment. These files are complementary parts of one uv workflow rather than separate version managers.
 
@@ -37,8 +37,8 @@ After reset, `run` polls for up to 10 seconds for exactly one serial port with t
 ./fc-test run --config configs/test/test-config-v001.json --port /dev/cu.usbmodem...
 ```
 
-pyserial owns the portable operating-system serial access. The connection disables software and hardware flow control, closes deterministically, and carries bounded raw LF-terminated byte lines. The first protocol exchange is `START_TEST`: the tester sends the selected test UUID, validates the matching metadata response, and only then creates an `in_progress` result in the repository-local ignored `results/` directory. A missing USB device or failed session handshake creates no report.
+pyserial owns the portable operating-system serial access. The connection disables software and hardware flow control, closes deterministically, and carries bounded raw LF-terminated byte lines. Before any firmware work, every test type in the selected test configuration must appear in the selected board configuration's `test_capabilities`. The first protocol exchange is `START_TEST`: the tester sends the selected test UUID and creates an `in_progress` result only after a valid response. It then checks the returned MCU and board identity plus whether firmware capabilities include every board capability. A failed handshake creates no report; a compatibility failure updates the newly created report to `failed` and stops before component execution.
 
 Zero probes, ambiguous multiple probes or USB ports, programming failure, verification failure, reset failure, missing tools, serial-open failures, and timeouts produce concise errors without Python tracebacks. Programming uses SWD connect-under-reset at 1 MHz, requires immediate verification, and never automatically mass-erases, changes option bytes, or disables protection.
 
-Device UID, MCU identity, board identity, firmware metadata, and capabilities are session-initialization data returned by `START_TEST`. They are validated and recorded before component dispatch and are deliberately not modeled as an `identity` component test.
+Device UID, MCU identity, board identity, firmware metadata, and capabilities are session-initialization data returned by `START_TEST`. Firmware version and revision are recorded for traceability, while board identity and required capabilities are validated before component dispatch. Firmware may advertise extra capabilities; it cannot omit one declared by the board. These are deliberately not modeled as an `identity` component test.

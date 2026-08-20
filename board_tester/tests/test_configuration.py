@@ -26,6 +26,17 @@ class ConfigurationLoadingTests(unittest.TestCase):
         self.assertEqual(configurations.board.revision, "1.7")
         self.assertEqual(configurations.board.mcu.model, "STM32F405RGT6")
         self.assertEqual(
+            configurations.board.test_capabilities,
+            (
+                "mcu_runtime",
+                "status_leds",
+                "rgb_led",
+                "imu",
+                "barometer",
+                "sd_card",
+            ),
+        )
+        self.assertEqual(
             configurations.test.name, "Flight Computer V1 Initial Acceptance"
         )
         self.assertEqual(
@@ -146,6 +157,29 @@ class ConfigurationLoadingTests(unittest.TestCase):
             ):
                 load_board_configuration(paths.board)
 
+    def test_board_capabilities_must_be_known_and_unique(self) -> None:
+        with self._configuration_tree() as paths:
+            board_value = self._valid_board_value()
+            board_value["test_capabilities"] = ["imu", "imu", "future_test"]
+            self._write_json(paths.board, board_value)
+
+            with self.assertRaisesRegex(
+                ConfigurationError, "contains duplicate value\\(s\\): imu"
+            ):
+                load_board_configuration(paths.board)
+
+    def test_test_types_must_be_advertised_by_board_before_building(self) -> None:
+        with self._configuration_tree() as paths:
+            board_value = self._valid_board_value()
+            board_value["test_capabilities"] = ["imu"]
+            self._write_json(paths.board, board_value)
+
+            with self.assertRaisesRegex(
+                ConfigurationError,
+                "not advertised by board example-board: sd_card",
+            ):
+                load_configurations(paths.test)
+
     @staticmethod
     def _valid_test_value() -> dict[str, object]:
         return {
@@ -180,6 +214,7 @@ class ConfigurationLoadingTests(unittest.TestCase):
                 "schematic_value": "STM32F405RGTx",
                 "package": "LQFP-64",
             },
+            "test_capabilities": ["imu", "sd_card"],
             "components": {"imu": {}},
             "buses": {"imu_spi": {}},
             "pins": {"PB3": {}},
