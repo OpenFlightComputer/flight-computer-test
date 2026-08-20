@@ -2,11 +2,11 @@
 
 ## Current milestone
 
-Milestone 6 — USB CDC transport and newline framing: **firmware side committed; board-tester side complete in the working tree, pending owner review**.
+Milestone 6 — USB CDC transport and newline framing: **complete and committed**.
 
-Stop here until the project owner reviews the uncommitted board-tester changes.
+Milestone 7 — protocol foundation, `START_TEST`, metadata, and initial report creation — is next. Its scope requires owner review before implementation.
 
-## In progress
+## Completed
 
 ### Milestone 6 — board-tester side
 
@@ -25,8 +25,6 @@ Stop here until the project owner reviews the uncommitted board-tester changes.
 - Added CDC descriptors without a serial-number descriptor; STM32 UID identity remains deferred to Milestone 7.
 - Added a 512-byte interrupt-to-main receive ring, two-line receive/transmit queues, asynchronous transmission completion, and observable bounded-drop counters without dynamic allocation.
 - Added LF framing with CRLF acceptance, a 4,096-byte maximum, discard-through-newline recovery, and native C tests for split packets, combined lines, maximum length, overflow, and recovery.
-
-## Completed
 
 ### Milestone 5
 

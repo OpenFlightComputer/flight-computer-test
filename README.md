@@ -30,7 +30,7 @@ Board configuration describes physical hardware. Test configuration holds a UUID
 
 ## Current state
 
-The firmware half of Milestone 6 is committed. The computer-side half is implemented in the working tree for review: `run` now continues from SWD reset into bounded USB CDC discovery and connection, with raw newline framing ready for the Milestone 7 message protocol. Physical flashing and USB enumeration remain unverified because STM32CubeProgrammer and hardware are not currently available.
+Milestone 6 is complete and committed. `run` now continues from SWD reset into bounded USB CDC discovery and connection, and raw newline framing is ready for the Milestone 7 message protocol. Physical flashing and USB enumeration remain unverified because STM32CubeProgrammer and hardware are not currently available.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the handoff state, [ROADMAP.md](ROADMAP.md) for planned milestones, [docs/repository-architecture.md](docs/repository-architecture.md) for responsibility boundaries, and [docs/hardware-reference.md](docs/hardware-reference.md) for the reviewed hardware interface.
 
