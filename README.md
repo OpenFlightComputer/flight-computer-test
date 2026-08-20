@@ -30,7 +30,7 @@ Board configuration describes physical hardware. Test configuration holds a UUID
 
 ## Current state
 
-Milestone 6 is complete and committed. `run` now continues from SWD reset into bounded USB CDC discovery and connection, and raw newline framing is ready for the Milestone 7 message protocol. Physical flashing and USB enumeration remain unverified because STM32CubeProgrammer and hardware are not currently available.
+Milestone 6 is complete and committed. Milestone 7 is implemented in the working tree for review: `run` now sends `START_TEST` after USB CDC connection, validates returned factory/device/firmware metadata, and creates an initial local result only after a successful response. Physical flashing and USB enumeration remain unverified because STM32CubeProgrammer and hardware are not currently available.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the handoff state, [ROADMAP.md](ROADMAP.md) for planned milestones, [docs/repository-architecture.md](docs/repository-architecture.md) for responsibility boundaries, and [docs/hardware-reference.md](docs/hardware-reference.md) for the reviewed hardware interface.
 

@@ -22,3 +22,21 @@ target_compile_options(test_newline_framer PRIVATE
 )
 
 add_test(NAME newline_framer COMMAND test_newline_framer)
+
+add_executable(test_json_protocol
+    test_json_protocol.c
+    ../protocol/json_protocol.c
+)
+
+target_include_directories(test_json_protocol PRIVATE
+    ../application
+    ../protocol
+)
+target_compile_options(test_json_protocol PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Werror
+)
+
+add_test(NAME json_protocol COMMAND test_json_protocol)

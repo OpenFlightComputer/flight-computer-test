@@ -12,6 +12,12 @@ from fc_test.flashing.programmer import Probe, ProgrammingError
 from fc_test.flashing.workflow import FlashOutcome
 from fc_test.main import main
 from fc_test.protocol.connection import SerialPort, UsbDiscoveryError
+from fc_test.protocol.messages import (
+    DeviceMetadata,
+    FirmwareMetadata,
+    StartTestResponse,
+)
+from fc_test.protocol.messages import ProtocolMessageError
 from fc_test.runner import run
 
 
@@ -70,6 +76,21 @@ class RunnerTests(unittest.TestCase):
                 INITIAL_TEST_CONFIG,
                 firmware_workflow=workflow,
                 usb_connection_workflow=usb_connection,
+                start_test_workflow=lambda _connection, *, test_uuid: StartTestResponse(
+                    command_id=1,
+                    device=DeviceMetadata(
+                        uid="00112233445566778899AABB",
+                        mcu="STM32F405RGT6",
+                        board_id="flightcomputer-v1",
+                        board_name="Flight Computer V1",
+                        board_revision="1.7",
+                    ),
+                    firmware=FirmwareMetadata("0.1.0", "revision"),
+                    capabilities=(),
+                ),
+                initial_report_writer=lambda _configurations, _response: Path(
+                    "/results/session.json"
+                ),
             )
 
         self.assertEqual(exit_code, 0)
@@ -108,7 +129,9 @@ class RunnerTests(unittest.TestCase):
             "Programming, verification, and reset completed.\n"
             "Waiting for USB CDC device...\n"
             "USB CDC: /dev/cu.usbmodem-test\n"
-            "Transport ready.\n",
+            "Requesting START_TEST metadata...\n"
+            "Test run created: /results/session.json\n"
+            "Session initialized.\n",
         )
 
     def test_run_forwards_explicit_port_and_reports_usb_error(self) -> None:
@@ -138,6 +161,38 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(exit_code, 1)
         self.assertEqual(requested_ports, ["/dev/cu.explicit"])
         self.assertEqual(stderr.getvalue(), "fc-test: requested port did not appear\n")
+
+    def test_run_does_not_create_report_when_start_test_fails(self) -> None:
+        report_calls: list[object] = []
+
+        def workflow(profile, *, probe_serial=None, programmer_path=None):
+            return FlashOutcome(
+                artifact=FirmwareArtifact(profile, Path("/build/firmware.elf")),
+                probe=Probe("ABC123"),
+            )
+
+        @contextmanager
+        def usb_connection(requested_port=None):
+            yield type(
+                "Connection",
+                (),
+                {"port": SerialPort("/dev/cu.board", 0xCAFE, 0x4001)},
+            )()
+
+        def fail_start(_connection, *, test_uuid):
+            raise ProtocolMessageError("device rejected START_TEST")
+
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            exit_code = run(
+                INITIAL_TEST_CONFIG,
+                firmware_workflow=workflow,
+                usb_connection_workflow=usb_connection,
+                start_test_workflow=fail_start,
+                initial_report_writer=lambda *_arguments: report_calls.append(True),
+            )
+
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(report_calls, [])
 
     def test_run_reports_programming_error_without_traceback(self) -> None:
         stdout = io.StringIO()

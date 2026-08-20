@@ -25,6 +25,9 @@ from fc_test.protocol.connection import (
     UsbTransportError,
     open_usb_cdc,
 )
+from fc_test.protocol.messages import ProtocolMessageError, StartTestResponse
+from fc_test.protocol.session import FramedConnection, start_test
+from fc_test.reporting.json_report import ReportError, create_initial_report
 
 
 class FirmwareWorkflow(Protocol):
@@ -43,6 +46,14 @@ class UsbConnectionWorkflow(Protocol):
     ) -> AbstractContextManager[UsbCdcConnection]: ...
 
 
+class StartTestWorkflow(Protocol):
+    def __call__(self, connection: FramedConnection, *, test_uuid) -> StartTestResponse: ...
+
+
+class InitialReportWriter(Protocol):
+    def __call__(self, configurations, response: StartTestResponse) -> Path: ...
+
+
 def run(
     configuration_path: Path,
     *,
@@ -52,6 +63,8 @@ def run(
     port: str | Path | None = None,
     firmware_workflow: FirmwareWorkflow = build_and_flash_firmware,
     usb_connection_workflow: UsbConnectionWorkflow = open_usb_cdc,
+    start_test_workflow: StartTestWorkflow = start_test,
+    initial_report_writer: InitialReportWriter = create_initial_report,
 ) -> int:
     """Load config, flash the board, and establish its USB CDC transport."""
 
@@ -106,8 +119,14 @@ def run(
     try:
         with usb_connection_workflow(port) as connection:
             print(f"USB CDC: {connection.port.device}")
-            print("Transport ready.")
-    except UsbTransportError as error:
+            print("Requesting START_TEST metadata...", flush=True)
+            response = start_test_workflow(
+                connection, test_uuid=configurations.test.uuid
+            )
+            report_path = initial_report_writer(configurations, response)
+    except (UsbTransportError, ProtocolMessageError, ReportError) as error:
         print(f"fc-test: {error}", file=sys.stderr)
         return 1
+    print(f"Test run created: {report_path}")
+    print("Session initialized.")
     return 0

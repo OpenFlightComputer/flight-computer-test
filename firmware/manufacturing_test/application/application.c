@@ -1,4 +1,5 @@
 #include "application.h"
+#include "session_protocol.h"
 #include "usb_cdc_transport.h"
 
 #include "stm32f4xx.h"
@@ -12,6 +13,7 @@ void application_run(void)
 
     for (;;) {
         usb_cdc_transport_process();
+        session_protocol_process();
         application_loop_iterations++;
         __NOP();
     }

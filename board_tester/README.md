@@ -37,7 +37,7 @@ After reset, `run` polls for up to 10 seconds for exactly one serial port with t
 ./fc-test run --config configs/test/test-config-v001.json --port /dev/cu.usbmodem...
 ```
 
-pyserial owns the portable operating-system serial access. The connection disables software and hardware flow control, closes deterministically, and carries bounded raw LF-terminated byte lines. JSON encoding and the first `START_TEST` exchange are intentionally deferred to Milestone 7.
+pyserial owns the portable operating-system serial access. The connection disables software and hardware flow control, closes deterministically, and carries bounded raw LF-terminated byte lines. The first protocol exchange is `START_TEST`: the tester sends the selected test UUID, validates the matching metadata response, and only then creates an `in_progress` result in the repository-local ignored `results/` directory. A missing USB device or failed session handshake creates no report.
 
 Zero probes, ambiguous multiple probes or USB ports, programming failure, verification failure, reset failure, missing tools, serial-open failures, and timeouts produce concise errors without Python tracebacks. Programming uses SWD connect-under-reset at 1 MHz, requires immediate verification, and never automatically mass-erases, changes option bytes, or disables protection.
 

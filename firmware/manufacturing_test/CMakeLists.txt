@@ -171,10 +171,13 @@ add_executable(manufacturing_test
     application/firmware_metadata.c
     application/main.c
     application/runtime_hooks.c
+    application/session_metadata.c
+    application/session_protocol.c
     board_support/flightcomputer_v1/stm32f4xx_it.c
     board_support/flightcomputer_v1/system_clock.c
     board_support/flightcomputer_v1/usb_device_port.c
     protocol/newline_framer.c
+    protocol/json_protocol.c
     protocol/usb_cdc_transport.c
     protocol/usb_descriptors.c
     "${STM32_DEVICE_ROOT}/Source/Templates/gcc/startup_stm32f405xx.s"

@@ -4,7 +4,26 @@
 
 Milestone 6 — USB CDC transport and newline framing: **complete and committed**.
 
-Milestone 7 — protocol foundation, `START_TEST`, metadata, and initial report creation — is next. Its scope requires owner review before implementation.
+Milestone 7 — protocol foundation, `START_TEST`, metadata, and initial report creation: **implemented in the working tree, pending owner review**.
+
+## In progress
+
+### Milestone 7 — protocol foundation (pending owner review)
+
+- Added a fixed-buffer, MIT-licensed `jsmn` JSON tokenizer to the firmware without dynamic allocation.
+- Added strict protocol-version-1 `START_TEST` request parsing, malformed/unsupported request errors, and bounded `START_TEST_RESPONSE` serialization.
+- Added application-loop dispatch after USB line framing; USB callbacks remain limited to byte movement.
+- Added compiled board and firmware metadata plus runtime STM32 factory-UID formatting for the response. Capabilities are currently intentionally empty because no component test is executable yet.
+- Added Python request/response models with strict schema, UTF-8, command-ID, UID, and capability validation.
+- Added an atomic initial `in_progress` report writer. Reports are created only after a valid `START_TEST_RESPONSE`, carry device/firmware/configuration metadata and an empty `results` array, and remain ignored locally because they include device identifiers.
+- Added native C JSON and Python session/report tests. Hardware acceptance remains unavailable without a board.
+
+## Milestone 7 validation
+
+- Native host tests cover valid field-order-independent `START_TEST` parsing, malformed/unknown/version-invalid UUID rejection, and metadata/capability response generation.
+- All 52 board-tester tests pass under the uv-managed Python 3.12 environment, including JSON encoding/decoding, command-ID mismatch and device-error handling, send/read ordering, report content, and confirmation that a failed handshake creates no report.
+- The manufacturing firmware builds cleanly in Release and Debug with the strict C warning policy. The Release image uses 24,440 bytes of Flash and 30,800 bytes of static RAM; the Debug image uses 36,252 bytes of Flash and 30,800 bytes of static RAM.
+- End-to-end flashing, USB enumeration, JSON exchange, UID reading, and report creation remain hardware acceptance items because no board is available.
 
 ## Completed
 
