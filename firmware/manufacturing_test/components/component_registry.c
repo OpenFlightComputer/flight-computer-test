@@ -4,12 +4,21 @@
 
 /*
  * Production entries are deliberately added only with their real component
- * implementation. An empty registry therefore truthfully advertises no
- * component capabilities until Milestone 10 introduces the first test.
+ * implementation.
  */
+extern void status_led_red_start(void);
+extern void status_led_green_start(void);
+extern component_test_process_result_t status_led_process(void);
+extern void status_led_stop(void);
+static const component_test_definition_t production_tests[] = {
+    { .type = "status_led_red", .start = status_led_red_start,
+      .process = status_led_process, .event = NULL, .stop = status_led_stop },
+    { .type = "status_led_green", .start = status_led_green_start,
+      .process = status_led_process, .event = NULL, .stop = status_led_stop },
+};
 static const component_test_registry_t production_registry = {
-    .definitions = NULL,
-    .count = 0U,
+    .definitions = production_tests,
+    .count = sizeof(production_tests) / sizeof(production_tests[0]),
 };
 
 const component_test_registry_t *component_registry_get(void)

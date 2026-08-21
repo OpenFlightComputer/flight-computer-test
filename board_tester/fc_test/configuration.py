@@ -13,6 +13,8 @@ SUPPORTED_TEST_TYPES = frozenset(
     {
         "mcu_runtime",
         "status_leds",
+        "status_led_red",
+        "status_led_green",
         "rgb_led",
         "imu",
         "barometer",

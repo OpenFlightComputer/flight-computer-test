@@ -175,6 +175,7 @@ add_executable(manufacturing_test
     application/session_metadata.c
     application/session_protocol.c
     components/component_registry.c
+    components/status_leds/status_led_test.c
     board_support/flightcomputer_v1/stm32f4xx_it.c
     board_support/flightcomputer_v1/system_clock.c
     board_support/flightcomputer_v1/usb_device_port.c
