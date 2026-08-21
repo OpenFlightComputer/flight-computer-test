@@ -91,6 +91,8 @@ class RunnerTests(unittest.TestCase):
                     capabilities=(
                         "mcu_runtime",
                         "status_leds",
+                        "status_led_red",
+                        "status_led_green",
                         "rgb_led",
                         "imu",
                         "barometer",

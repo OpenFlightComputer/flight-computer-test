@@ -56,7 +56,8 @@ class SessionValidationTests(unittest.TestCase):
             validation.failures,
             (
                 "firmware is missing board capability/capabilities: "
-                "status_leds, rgb_led, imu, barometer, sd_card",
+                "status_leds, status_led_red, status_led_green, rgb_led, "
+                "imu, barometer, sd_card",
             ),
         )
 

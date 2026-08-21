@@ -166,6 +166,8 @@ def finalize_component_run(report_path: Path, *, now: datetime | None = None) ->
             report = json.load(report_file)
         if not isinstance(report, dict):
             raise ReportError(f"report is not a JSON object: {report_path}")
+        if any(result.get("status") != "passed" for result in report.get("results", [])):
+            return
         report["status"] = "passed"
         report["completed_at"] = timestamp_text
         _write_report(report, report_path, temporary_path, mode="w")

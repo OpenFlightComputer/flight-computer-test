@@ -34,6 +34,7 @@ from fc_test.reporting.json_report import record_session_validation
 from fc_test.reporting.json_report import finalize_component_run, record_component_result
 from fc_test.session_validation import SessionValidation, validate_session
 from fc_test.tests.base import ComponentTestHandler, GenericComponentTestHandler
+from fc_test.tests.registry import create_handler
 
 
 class FirmwareWorkflow(Protocol):
@@ -150,7 +151,7 @@ def run(
                 for command_id, definition in enumerate(
                     configurations.test.enabled_tests, start=2
                 ):
-                    handler = handler_factory()
+                    handler = create_handler(definition.type) if handler_factory is GenericComponentTestHandler else handler_factory()
                     try:
                         result = handler.run(
                             connection,
@@ -194,10 +195,7 @@ def run(
                         status=result.status,
                         details=result.details,
                     )
-                    if result.status != "passed":
-                        break
-                else:
-                    component_run_finalizer(report_path)
+                component_run_finalizer(report_path)
     except (UsbTransportError, ProtocolMessageError, ReportError) as error:
         print(f"fc-test: {error}", file=sys.stderr)
         return 1

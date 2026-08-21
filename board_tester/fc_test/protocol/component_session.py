@@ -27,6 +27,7 @@ def run_component_test(
     command_id: int,
     test_type: str,
     on_event: Callable[[ComponentTestEvent], None],
+    on_started: Callable[[], ComponentTestCompletion | None] | None = None,
 ) -> ComponentTestCompletion:
     """Run one component test, waiting indefinitely after it has started."""
 
@@ -41,6 +42,10 @@ def run_component_test(
     )
     if first != "TEST_STARTED":
         raise ProtocolMessageError("component test did not acknowledge TEST_STARTED")
+    if on_started is not None:
+        completion = on_started()
+        if completion is not None:
+            return completion
 
     while True:
         try:
