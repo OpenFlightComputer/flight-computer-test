@@ -37,7 +37,7 @@ Directions are from the MCU perspective. Alternate functions follow the STM32F40
 
 | MCU pin | Net | Direction | Intended interface | Alternate function / mode | Connected hardware | Test relevance |
 | --- | --- | --- | --- | --- | --- | --- |
-| PA1 | WS2812_DI | Output | WS2812 data | GPIO or timer mode TBD | R24 to LED1 DIN | RGB LED acceptance test |
+| PA1 | WS2812_DI | Output | WS2812 data | TIM2_CH2 AF1, DMA1 Stream 6 Channel 3 | R24 to LED1 DIN | RGB LED acceptance test |
 | PA2 | GPS_RX | Output | GPS serial receive input | USART2_TX, AF7 | GPS connector/test point path | Future interface test |
 | PA3 | GPS_TX | Input | GPS serial transmit output | USART2_RX, AF7 | GPS connector/test point path | Future interface test |
 | PA4 | VBAT_ADC | Analog input | Battery-voltage sense | ADC1_IN4 | Divider/filter from ESC_VBAT | Outside V1 software power bring-up |
@@ -84,7 +84,7 @@ Signal names such as `GPS_RX` and `RP1_RX` appear to be named from the external 
 - USB-C D+/D− route to the STM32 OTG FS pins. CC1 and CC2 each have pull-down resistors. VBUS reaches PA9 through a divider/sense path rather than a direct net label.
 - The SWD header exposes the complete V1 programming set required by the board-tester workflow.
 - The red and green discrete LEDs require hardware review before Milestone 11. Both the schematic netlist and PCB connect D4/D5 pad 2 (`A`) to GND and pad 1 (`K`) toward the MCU through a resistor. That appears reversed for the standard KiCad LED symbol and cannot be solved merely by choosing active-high versus active-low firmware.
-- The WS2812 is powered from +5 V and takes 3.3 V MCU data through R24 with no level shifter shown. Validate the actual part's input-high threshold/noise margin during bring-up rather than assuming guaranteed logic compatibility.
+- The fitted WS2812B-B/W V5 datasheet specifies a 2.7 V minimum input-high threshold at 5 V, so the STM32's 3.3 V DIN signal is within the stated logic range. Confirm the waveform and noise margin on the first physical board.
 
 ## Revision relationship
 

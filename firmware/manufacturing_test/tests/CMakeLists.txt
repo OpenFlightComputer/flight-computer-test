@@ -44,7 +44,6 @@ add_test(NAME json_protocol COMMAND test_json_protocol)
 add_executable(test_component_test_runner
     test_component_test_runner.c
     ../application/component_test_runner.c
-    ../components/component_registry.c
 )
 
 target_include_directories(test_component_test_runner PRIVATE
@@ -59,3 +58,20 @@ target_compile_options(test_component_test_runner PRIVATE
 )
 
 add_test(NAME component_test_runner COMMAND test_component_test_runner)
+
+add_executable(test_ws2812_encoder
+    test_ws2812_encoder.c
+    ../components/rgb_led/ws2812_encoder.c
+)
+
+target_include_directories(test_ws2812_encoder PRIVATE
+    ../components/rgb_led
+)
+target_compile_options(test_ws2812_encoder PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Werror
+)
+
+add_test(NAME ws2812_encoder COMMAND test_ws2812_encoder)

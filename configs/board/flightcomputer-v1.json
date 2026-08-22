@@ -131,7 +131,8 @@
       "net": "WS2812_DI",
       "direction": "output",
       "role": "rgb_led_data",
-      "mode": "GPIO_or_timer_TBD"
+      "mode": "TIM2_CH2_AF1",
+      "dma": "DMA1_Stream6_Channel3"
     },
     "PA2": {
       "net": "GPS_RX",

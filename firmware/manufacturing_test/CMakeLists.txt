@@ -136,6 +136,7 @@ add_library(stm32cube_f4 STATIC
     "${STM32_DEVICE_ROOT}/Source/Templates/system_stm32f4xx.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_cortex.c"
+    "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_dma.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_flash.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_flash_ex.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_gpio.c"
@@ -145,6 +146,8 @@ add_library(stm32cube_f4 STATIC
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_pwr_ex.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_rcc.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_rcc_ex.c"
+    "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_tim.c"
+    "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_tim_ex.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_ll_usb.c"
     "${STM32_USB_DEVICE_ROOT}/Core/Src/usbd_core.c"
     "${STM32_USB_DEVICE_ROOT}/Core/Src/usbd_ctlreq.c"
@@ -175,6 +178,8 @@ add_executable(manufacturing_test
     application/session_metadata.c
     application/session_protocol.c
     components/component_registry.c
+    components/rgb_led/rgb_led_test.c
+    components/rgb_led/ws2812_encoder.c
     components/status_leds/status_led_test.c
     board_support/flightcomputer_v1/stm32f4xx_it.c
     board_support/flightcomputer_v1/system_clock.c

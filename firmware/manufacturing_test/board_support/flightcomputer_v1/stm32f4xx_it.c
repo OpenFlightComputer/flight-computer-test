@@ -3,6 +3,7 @@
 #include "stm32f4xx_hal.h"
 
 extern PCD_HandleTypeDef openflightcomputer_usb_pcd;
+extern void rgb_led_dma_irq_handler(void);
 
 void NMI_Handler(void)
 {
@@ -54,4 +55,9 @@ void SysTick_Handler(void)
 void OTG_FS_IRQHandler(void)
 {
     HAL_PCD_IRQHandler(&openflightcomputer_usb_pcd);
+}
+
+void DMA1_Stream6_IRQHandler(void)
+{
+    rgb_led_dma_irq_handler();
 }
