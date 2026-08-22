@@ -7,7 +7,11 @@
 #include <stdarg.h>
 #include <string.h>
 
-#define JSON_PROTOCOL_TOKEN_CAPACITY 16U
+/*
+ * The firmware remains allocation-free. 64 tokens allow nested component
+ * parameter objects beyond the current RGB triplet without adding a heap.
+ */
+#define JSON_PROTOCOL_TOKEN_CAPACITY 64U
 
 static bool token_equals(const char *line, const jsmntok_t *token, const char *value)
 {
@@ -43,6 +47,80 @@ static bool parse_positive_uint32(
         return false;
     }
     *value = (uint32_t)parsed;
+    return true;
+}
+
+static bool parse_uint8(
+    const char *line,
+    const jsmntok_t *token,
+    uint8_t *value
+)
+{
+    uint32_t parsed = 0U;
+
+    if (token->type != JSMN_PRIMITIVE || token->start == token->end) {
+        return false;
+    }
+    for (int index = token->start; index < token->end; index++) {
+        const char character = line[index];
+        if (character < '0' || character > '9') {
+            return false;
+        }
+        parsed = parsed * 10U + (uint32_t)(character - '0');
+        if (parsed > UINT8_MAX) {
+            return false;
+        }
+    }
+    *value = (uint8_t)parsed;
+    return true;
+}
+
+static bool parse_rgb_parameters(
+    const char *line,
+    const jsmntok_t *tokens,
+    int token_count,
+    int *next_index,
+    json_protocol_request_t *request
+)
+{
+    const jsmntok_t *object = &tokens[*next_index - 1];
+    bool red_seen = false;
+    bool green_seen = false;
+    bool blue_seen = false;
+    int index = *next_index;
+
+    if (object->type != JSMN_OBJECT) {
+        return false;
+    }
+    while (index + 1 < token_count && tokens[index].start < object->end) {
+        const jsmntok_t *key = &tokens[index];
+        const jsmntok_t *value = &tokens[index + 1];
+
+        if (token_equals(line, key, "red")) {
+            if (red_seen || !parse_uint8(line, value, &request->red)) {
+                return false;
+            }
+            red_seen = true;
+        } else if (token_equals(line, key, "green")) {
+            if (green_seen || !parse_uint8(line, value, &request->green)) {
+                return false;
+            }
+            green_seen = true;
+        } else if (token_equals(line, key, "blue")) {
+            if (blue_seen || !parse_uint8(line, value, &request->blue)) {
+                return false;
+            }
+            blue_seen = true;
+        } else {
+            return false;
+        }
+        index += 2;
+    }
+    if (index > token_count || !red_seen || !green_seen || !blue_seen) {
+        return false;
+    }
+    request->rgb_colour_present = true;
+    *next_index = index;
     return true;
 }
 
@@ -140,12 +218,17 @@ bool json_protocol_parse_request(
     bool command_id_seen = false;
     bool test_uuid_seen = false;
     bool test_type_seen = false;
+    bool parameters_seen = false;
     int token_count;
 
     request->type = JSON_PROTOCOL_REQUEST_INVALID;
     request->command_id = 0U;
     request->test_uuid[0] = '\0';
     request->test_type[0] = '\0';
+    request->rgb_colour_present = false;
+    request->red = 0U;
+    request->green = 0U;
+    request->blue = 0U;
     jsmn_init(&parser);
     token_count = jsmn_parse(
         &parser,
@@ -154,13 +237,16 @@ bool json_protocol_parse_request(
         tokens,
         JSON_PROTOCOL_TOKEN_CAPACITY
     );
-    if ((token_count != 7 && token_count != 9) || tokens[0].type != JSMN_OBJECT) {
+    if ((token_count != 7 && token_count != 9 && token_count != 17) ||
+        tokens[0].type != JSMN_OBJECT) {
         return false;
     }
 
-    for (int index = 1; index < token_count; index += 2) {
+    for (int index = 1; index < token_count;) {
         const jsmntok_t *key = &tokens[index];
         const jsmntok_t *value = &tokens[index + 1];
+
+        index += 2;
 
         if (token_equals(line, key, "protocol_version")) {
             uint32_t version;
@@ -200,6 +286,13 @@ bool json_protocol_parse_request(
                 return false;
             }
             test_type_seen = true;
+        } else if (token_equals(line, key, "parameters")) {
+            if (parameters_seen || !parse_rgb_parameters(
+                    line, tokens, token_count, &index, request
+                )) {
+                return false;
+            }
+            parameters_seen = true;
         } else {
             return false;
         }
@@ -209,13 +302,18 @@ bool json_protocol_parse_request(
         return false;
     }
     if (request->type == JSON_PROTOCOL_REQUEST_START_TEST) {
-        return token_count == 9 && test_uuid_seen && !test_type_seen;
+        return token_count == 9 && test_uuid_seen && !test_type_seen &&
+            !parameters_seen;
     }
     if (request->type == JSON_PROTOCOL_REQUEST_RUN_COMPONENT_TEST) {
-        return token_count == 9 && test_type_seen && !test_uuid_seen;
+        const bool is_rgb_led = strcmp(request->test_type, "rgb_led") == 0;
+        return test_type_seen && !test_uuid_seen &&
+            ((is_rgb_led && token_count == 17 && parameters_seen) ||
+             (!is_rgb_led && token_count == 9 && !parameters_seen));
     }
     return request->type == JSON_PROTOCOL_REQUEST_STOP_COMPONENT_TEST &&
-        token_count == 7 && !test_uuid_seen && !test_type_seen;
+        token_count == 7 && !test_uuid_seen && !test_type_seen &&
+        !parameters_seen;
 }
 
 bool json_protocol_build_start_test_response(

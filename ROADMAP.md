@@ -13,8 +13,8 @@ Development proceeds one accepted milestone at a time. The current status is rec
 7. Protocol foundation, `START_TEST`, metadata, and initial report creation
 8. Capability and session validation
 9. Generic component start/event/stop lifecycle
-10. WS2812 primary-color operator test
-11. Discrete status LED tests
+10. Discrete status LED tests
+11. WS2812 configurable-colour operator test
 12. BMI270 communication, stationary, and movement tests
 13. BMP388 functional and plausibility tests
 14. microSD write/read/checksum/cleanup test

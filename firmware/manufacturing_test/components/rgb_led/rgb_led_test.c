@@ -97,12 +97,18 @@ static bool transmit(uint8_t red, uint8_t green, uint8_t blue)
     ) == HAL_OK;
 }
 
-void rgb_led_test_start(void)
+void rgb_led_test_start(const component_test_parameters_t *parameters)
 {
-    /* Temporary firmware-side default; Python will later supply raw RGB bytes. */
     transmission_failed = !initialize_hardware();
-    if (!transmission_failed) {
-        transmission_failed = !transmit(40U, 220U, 200U);
+    if (!transmission_failed && parameters != NULL &&
+        parameters->rgb_colour_present) {
+        transmission_failed = !transmit(
+            parameters->red,
+            parameters->green,
+            parameters->blue
+        );
+    } else {
+        transmission_failed = true;
     }
 }
 

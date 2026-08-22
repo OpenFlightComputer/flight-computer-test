@@ -2,20 +2,19 @@
 
 ## Current milestone
 
-Milestone 7 — protocol foundation, `START_TEST`, metadata, and initial report creation: **complete and committed**.
+Milestone 10 — discrete status LED tests: **complete and committed**.
 
-Milestone 8 — configuration and session capability validation: **complete and committed as `b52cb6f`**.
-
-Milestone 9 — generic firmware component-test lifecycle: **implemented in the working tree, pending owner review**.
+Milestone 11 — WS2812 configurable-colour operator test: **firmware driver committed as `8685611`; Python orchestration implemented in the working tree, pending owner review**.
 
 ## In progress
 
-### Milestone 9 — generic firmware component-test lifecycle (firmware side, pending owner review)
+### Milestone 11 — WS2812 configurable-colour operator test
 
-- Added a static production component registry as the sole source of runnable component capabilities. It remains intentionally empty until the first real component implementation is added.
-- Added one active-test slot with non-blocking `start`, repeated main-loop `process`, immediate cleanup `stop`, and no queue for concurrent requests.
-- Added firmware support for `RUN_COMPONENT_TEST`, `STOP_COMPONENT_TEST`, `TEST_STARTED`, `TEST_EVENT`, `TEST_COMPLETED`, and `TEST_STOPPED`, including unknown, busy, and no-active-test errors.
-- Added native lifecycle tests with a fake component for active-state, event, completion, and stop behavior; Release firmware builds successfully.
+- Added a dedicated RGB LED handler that reads a human-friendly colour policy, converts CSS3 names (including `turquoise`, RGB `(64, 224, 208)`), hexadecimal values, or `rgb(r,g,b)` notation to raw channels, asks for operator confirmation with Enter as the default yes response, and records the colour, raw channels, and outcome.
+- Extended `RUN_COMPONENT_TEST` with strict RGB parameters while leaving other component command shapes unchanged.
+- Passed the RGB values through the generic component start interface into the timer/DMA driver; the firmware no longer owns a hard-coded test colour.
+- Added immutable `test-config-v003.json` rather than modifying the earlier accepted configurations.
+- Hardware-independent Python, JSON-protocol, component-runner, and WS2812 encoder tests pass. Debug and Release firmware images build successfully; physical colour and signal validation still require hardware.
 
 ## Milestone 8 validation
 

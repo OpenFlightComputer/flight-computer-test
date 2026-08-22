@@ -8,8 +8,9 @@ static unsigned int process_count;
 static unsigned int stop_count;
 static component_test_process_result_t next_result;
 
-static void fake_start(void)
+static void fake_start(const component_test_parameters_t *parameters)
 {
+    (void)parameters;
     start_count++;
 }
 
@@ -51,9 +52,9 @@ static void test_runner_keeps_one_test_active_until_completion(void)
 
     reset_fake();
     component_test_runner_initialize(&runner);
-    assert(component_test_runner_start(&runner, &fake_definition, 7U));
+    assert(component_test_runner_start(&runner, &fake_definition, 7U, NULL));
     assert(start_count == 1U);
-    assert(!component_test_runner_start(&runner, &fake_definition, 8U));
+    assert(!component_test_runner_start(&runner, &fake_definition, 8U, NULL));
     assert(component_test_runner_process(&runner) == COMPONENT_TEST_RUNNER_UPDATE_NONE);
     assert(process_count == 1U);
     assert(stop_count == 0U);
@@ -76,7 +77,7 @@ static void test_stop_clears_active_test_before_cleanup(void)
 
     reset_fake();
     component_test_runner_initialize(&runner);
-    assert(component_test_runner_start(&runner, &fake_definition, 7U));
+    assert(component_test_runner_start(&runner, &fake_definition, 7U, NULL));
     assert(component_test_runner_stop(&runner));
     assert(component_test_runner_state(&runner) == COMPONENT_TEST_RUNNER_IDLE);
     assert(stop_count == 1U);

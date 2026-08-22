@@ -20,14 +20,16 @@ static void initialize_pins(void)
     leds_off();
 }
 
-void status_led_red_start(void)
+void status_led_red_start(const component_test_parameters_t *parameters)
 {
+    (void)parameters;
     initialize_pins();
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_RESET);
 }
 
-void status_led_green_start(void)
+void status_led_green_start(const component_test_parameters_t *parameters)
 {
+    (void)parameters;
     initialize_pins();
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
 }

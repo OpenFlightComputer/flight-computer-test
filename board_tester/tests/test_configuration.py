@@ -16,6 +16,7 @@ from fc_test.configuration import (
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 INITIAL_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v001.json"
+RGB_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v003.json"
 
 
 class ConfigurationLoadingTests(unittest.TestCase):
@@ -65,6 +66,27 @@ class ConfigurationLoadingTests(unittest.TestCase):
             configuration.board_config_path,
             (REPOSITORY_ROOT / "configs/board/flightcomputer-v1.json").resolve(),
         )
+
+    def test_rgb_configuration_selects_turquoise(self) -> None:
+        configuration = load_test_configuration(RGB_TEST_CONFIG)
+        rgb_test = next(test for test in configuration.tests if test.type == "rgb_led")
+
+        self.assertEqual(rgb_test.parameters, {"colour": "turquoise"})
+
+    def test_rgb_configuration_rejects_unknown_colours(self) -> None:
+        with self._configuration_tree() as paths:
+            test_value = self._valid_test_value()
+            test_value["tests"] = [
+                {
+                    "type": "rgb_led",
+                    "enabled": True,
+                    "parameters": {"colour": "ultraviolet"},
+                }
+            ]
+            self._write_json(paths.test, test_value)
+
+            with self.assertRaisesRegex(ConfigurationError, "CSS3 name"):
+                load_test_configuration(paths.test)
 
     def test_disabled_test_is_preserved_but_excluded_from_enabled_tests(self) -> None:
         with self._configuration_tree() as paths:

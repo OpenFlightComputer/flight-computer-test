@@ -2,6 +2,8 @@
 #define OPENFLIGHTCOMPUTER_COMPONENT_REGISTRY_H
 
 #include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 #define COMPONENT_TEST_TYPE_CAPACITY 32U
 
@@ -13,8 +15,15 @@ typedef enum {
 } component_test_process_result_t;
 
 typedef struct {
+    bool rgb_colour_present;
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+} component_test_parameters_t;
+
+typedef struct {
     const char *type;
-    void (*start)(void);
+    void (*start)(const component_test_parameters_t *parameters);
     component_test_process_result_t (*process)(void);
     const char *(*event)(void);
     void (*stop)(void);

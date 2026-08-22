@@ -6,11 +6,11 @@
  * Production entries are deliberately added only with their real component
  * implementation.
  */
-extern void status_led_red_start(void);
-extern void status_led_green_start(void);
+extern void status_led_red_start(const component_test_parameters_t *parameters);
+extern void status_led_green_start(const component_test_parameters_t *parameters);
 extern component_test_process_result_t status_led_process(void);
 extern void status_led_stop(void);
-extern void rgb_led_test_start(void);
+extern void rgb_led_test_start(const component_test_parameters_t *parameters);
 extern component_test_process_result_t rgb_led_test_process(void);
 extern void rgb_led_test_stop(void);
 static const component_test_definition_t production_tests[] = {

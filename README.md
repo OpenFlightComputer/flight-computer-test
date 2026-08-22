@@ -43,13 +43,13 @@ Synchronize the uv-managed development environment, then run the standard consol
 ```bash
 uv sync --project board_tester
 uv run --project board_tester fc-test firmware build
-uv run --project board_tester fc-test run --config configs/test/test-config-v001.json
+uv run --project board_tester fc-test run --config configs/test/test-config-v003.json
 ```
 
 Or use the repository-local bootstrap, which delegates to the same uv project and console entry point:
 
 ```bash
-./fc-test run --config configs/test/test-config-v001.json
+./fc-test run --config configs/test/test-config-v003.json
 ```
 
 Build and flash can also be invoked independently:

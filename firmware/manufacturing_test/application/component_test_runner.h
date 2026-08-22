@@ -27,7 +27,8 @@ void component_test_runner_initialize(component_test_runner_t *runner);
 bool component_test_runner_start(
     component_test_runner_t *runner,
     const component_test_definition_t *definition,
-    uint32_t command_id
+    uint32_t command_id,
+    const component_test_parameters_t *parameters
 );
 component_test_runner_update_t component_test_runner_process(
     component_test_runner_t *runner

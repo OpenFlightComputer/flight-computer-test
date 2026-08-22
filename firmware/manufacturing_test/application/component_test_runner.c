@@ -9,7 +9,8 @@ void component_test_runner_initialize(component_test_runner_t *runner)
 bool component_test_runner_start(
     component_test_runner_t *runner,
     const component_test_definition_t *definition,
-    uint32_t command_id
+    uint32_t command_id,
+    const component_test_parameters_t *parameters
 )
 {
     if (runner->active_definition != NULL || definition == NULL || command_id == 0U) {
@@ -17,7 +18,7 @@ bool component_test_runner_start(
     }
     runner->active_definition = definition;
     runner->active_command_id = command_id;
-    definition->start();
+    definition->start(parameters);
     return true;
 }
 

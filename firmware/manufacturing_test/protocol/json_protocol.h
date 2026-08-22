@@ -24,6 +24,10 @@ typedef struct {
     uint32_t command_id;
     char test_uuid[JSON_PROTOCOL_TEST_UUID_LENGTH + 1U];
     char test_type[JSON_PROTOCOL_TEST_TYPE_CAPACITY];
+    bool rgb_colour_present;
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
 } json_protocol_request_t;
 
 bool json_protocol_parse_request(

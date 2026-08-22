@@ -10,13 +10,13 @@ From the repository root, synchronize the uv-managed environment and run the con
 
 ```bash
 uv sync --project board_tester
-uv run --project board_tester fc-test run --config configs/test/test-config-v001.json
+uv run --project board_tester fc-test run --config configs/test/test-config-v003.json
 ```
 
 The repository also provides a bootstrap that delegates to the same uv project:
 
 ```bash
-./fc-test run --config configs/test/test-config-v001.json
+./fc-test run --config configs/test/test-config-v003.json
 ```
 
 `run` does not depend on prior build or flash commands. It loads configuration, invokes the canonical CMake Release preset, discovers one ST-Link, programs and verifies the generated ELF, resets the target, waits for its USB CDC port, and opens the transport. The same build and flashing services are independently available as:

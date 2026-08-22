@@ -28,11 +28,16 @@ def run_component_test(
     test_type: str,
     on_event: Callable[[ComponentTestEvent], None],
     on_started: Callable[[], ComponentTestCompletion | None] | None = None,
+    parameters: dict[str, int] | None = None,
 ) -> ComponentTestCompletion:
     """Run one component test, waiting indefinitely after it has started."""
 
     connection.write_line(
-        encode_run_component_test(command_id=command_id, test_type=test_type),
+        encode_run_component_test(
+            command_id=command_id,
+            test_type=test_type,
+            parameters=parameters,
+        ),
         timeout_seconds=COMPONENT_TEST_WRITE_TIMEOUT_SECONDS,
     )
     first = decode_component_test_message(

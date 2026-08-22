@@ -70,6 +70,27 @@ class MessageTests(unittest.TestCase):
         self.assertIsInstance(event, ComponentTestEvent)
         self.assertEqual(event.event, "operator_confirmation_required")
         self.assertEqual(completion, ComponentTestCompletion(2, "rgb_led", "passed"))
+
+    def test_rgb_parameters_are_encoded_as_raw_bytes(self) -> None:
+        encoded = encode_run_component_test(
+            command_id=2,
+            test_type="rgb_led",
+            parameters={"red": 40, "green": 220, "blue": 200},
+        )
+
+        self.assertEqual(
+            json.loads(encoded)["parameters"],
+            {"red": 40, "green": 220, "blue": 200},
+        )
+
+    def test_rgb_parameters_reject_values_outside_one_byte(self) -> None:
+        with self.assertRaisesRegex(ValueError, "0 through 255"):
+            encode_run_component_test(
+                command_id=2,
+                test_type="rgb_led",
+                parameters={"red": 256, "green": 220, "blue": 200},
+            )
+
     def test_start_test_request_has_the_protocol_contract(self) -> None:
         test_uuid = UUID("ccc7d571-141e-4054-8e77-6ac3a97ababa")
 

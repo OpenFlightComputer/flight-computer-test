@@ -65,9 +65,16 @@ static void process_line(uint8_t *line, size_t line_length)
                     SESSION_PROTOCOL_LINE_CAPACITY, &response_length
                 );
             } else {
+                const component_test_parameters_t parameters = {
+                    .rgb_colour_present = request.rgb_colour_present,
+                    .red = request.red,
+                    .green = request.green,
+                    .blue = request.blue,
+                };
                 /* The registry entry is runnable: make it the single active test. */
                 (void)component_test_runner_start(
-                    &component_test_runner, definition, request.command_id
+                    &component_test_runner, definition, request.command_id,
+                    &parameters
                 );
                 response_ready = json_protocol_build_test_response(
                     "TEST_STARTED", request.command_id, definition->type, "running",

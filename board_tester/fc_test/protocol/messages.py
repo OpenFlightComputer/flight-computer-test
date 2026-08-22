@@ -70,15 +70,32 @@ def encode_start_test(*, command_id: int, test_uuid: UUID) -> bytes:
     ).encode("ascii")
 
 
-def encode_run_component_test(*, command_id: int, test_type: str) -> bytes:
+def encode_run_component_test(
+    *,
+    command_id: int,
+    test_type: str,
+    parameters: dict[str, int] | None = None,
+) -> bytes:
     """Encode a request to start one firmware component test."""
 
     _validate_command_id(command_id)
     _validate_test_type(test_type, "test_type")
-    return json.dumps(
-        {"protocol_version": PROTOCOL_VERSION, "type": "RUN_COMPONENT_TEST",
-         "command_id": command_id, "test_type": test_type}, separators=(",", ":")
-    ).encode("ascii")
+    request: dict[str, Any] = {
+        "protocol_version": PROTOCOL_VERSION,
+        "type": "RUN_COMPONENT_TEST",
+        "command_id": command_id,
+        "test_type": test_type,
+    }
+    if parameters is not None:
+        if parameters.keys() != {"red", "green", "blue"}:
+            raise ValueError("RGB parameters must contain red, green, and blue")
+        if any(
+            type(value) is not int or value < 0 or value > 255
+            for value in parameters.values()
+        ):
+            raise ValueError("RGB parameters must be integers from 0 through 255")
+        request["parameters"] = parameters
+    return json.dumps(request, separators=(",", ":")).encode("ascii")
 
 
 def encode_stop_component_test(*, command_id: int) -> bytes:

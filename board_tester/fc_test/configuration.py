@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+from fc_test.tests.rgb_led.colours import ColourError, colour_to_rgb
+
 
 SUPPORTED_TEST_TYPES = frozenset(
     {
@@ -359,6 +361,18 @@ def load_test_configuration(path: Path) -> TestConfiguration:
         parameters = _require_object(
             definition, "parameters", path=path, location=location
         )
+        if test_type == "rgb_led" and parameters:
+            if parameters.keys() != {"colour"}:
+                raise ConfigurationError(
+                    path,
+                    f"{location}.parameters may contain only colour",
+                )
+            try:
+                colour_to_rgb(parameters["colour"])
+            except ColourError as error:
+                raise ConfigurationError(
+                    path, f"{location}.parameters.colour: {error}"
+                ) from error
         definitions.append(
             TestDefinition(type=test_type, enabled=enabled, parameters=parameters)
         )

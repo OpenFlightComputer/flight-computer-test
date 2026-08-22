@@ -49,10 +49,15 @@ class ComponentSessionTests(unittest.TestCase):
         completion = run_component_test(
             connection, command_id=2, test_type="rgb_led",
             on_event=lambda event: events.append(event.event),
+            parameters={"red": 40, "green": 220, "blue": 200},
         )
 
         self.assertEqual(events, ["operator_confirmation_required"])
         self.assertEqual(completion.status, "passed")
+        self.assertEqual(
+            json.loads(connection.writes[0])["parameters"],
+            {"red": 40, "green": 220, "blue": 200},
+        )
 
 
 if __name__ == "__main__":

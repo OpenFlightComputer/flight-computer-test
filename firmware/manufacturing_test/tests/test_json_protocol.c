@@ -94,7 +94,7 @@ static void test_component_requests_are_decoded(void)
 {
     static const char run_request[] =
         "{\"protocol_version\":1,\"type\":\"RUN_COMPONENT_TEST\","
-        "\"command_id\":8,\"test_type\":\"rgb_led\"}";
+        "\"command_id\":8,\"test_type\":\"status_led_red\"}";
     static const char stop_request[] =
         "{\"protocol_version\":1,\"type\":\"STOP_COMPONENT_TEST\","
         "\"command_id\":9}";
@@ -104,11 +104,48 @@ static void test_component_requests_are_decoded(void)
         run_request, sizeof(run_request) - 1U, &parsed
     ));
     assert(parsed.type == JSON_PROTOCOL_REQUEST_RUN_COMPONENT_TEST);
-    assert(strcmp(parsed.test_type, "rgb_led") == 0);
+    assert(strcmp(parsed.test_type, "status_led_red") == 0);
     assert(json_protocol_parse_request(
         stop_request, sizeof(stop_request) - 1U, &parsed
     ));
     assert(parsed.type == JSON_PROTOCOL_REQUEST_STOP_COMPONENT_TEST);
+}
+
+static void test_rgb_parameters_are_decoded_in_any_field_order(void)
+{
+    static const char request[] =
+        "{\"parameters\":{\"blue\":200,\"red\":40,\"green\":220},"
+        "\"test_type\":\"rgb_led\",\"command_id\":8,"
+        "\"type\":\"RUN_COMPONENT_TEST\",\"protocol_version\":1}";
+    json_protocol_request_t parsed;
+
+    assert(json_protocol_parse_request(request, sizeof(request) - 1U, &parsed));
+    assert(parsed.rgb_colour_present);
+    assert(parsed.red == 40U);
+    assert(parsed.green == 220U);
+    assert(parsed.blue == 200U);
+}
+
+static void test_invalid_rgb_parameters_are_rejected(void)
+{
+    static const char absent[] =
+        "{\"protocol_version\":1,\"type\":\"RUN_COMPONENT_TEST\","
+        "\"command_id\":8,\"test_type\":\"rgb_led\"}";
+    static const char missing[] =
+        "{\"protocol_version\":1,\"type\":\"RUN_COMPONENT_TEST\","
+        "\"command_id\":8,\"test_type\":\"rgb_led\","
+        "\"parameters\":{\"red\":40,\"green\":220}}";
+    static const char out_of_range[] =
+        "{\"protocol_version\":1,\"type\":\"RUN_COMPONENT_TEST\","
+        "\"command_id\":8,\"test_type\":\"rgb_led\","
+        "\"parameters\":{\"red\":256,\"green\":220,\"blue\":200}}";
+    json_protocol_request_t parsed;
+
+    assert(!json_protocol_parse_request(absent, sizeof(absent) - 1U, &parsed));
+    assert(!json_protocol_parse_request(missing, sizeof(missing) - 1U, &parsed));
+    assert(!json_protocol_parse_request(
+        out_of_range, sizeof(out_of_range) - 1U, &parsed
+    ));
 }
 
 static void test_component_response_is_serialized(void)
@@ -136,6 +173,8 @@ int main(void)
     test_malformed_or_unknown_fields_are_rejected();
     test_start_response_contains_session_metadata();
     test_component_requests_are_decoded();
+    test_rgb_parameters_are_decoded_in_any_field_order();
+    test_invalid_rgb_parameters_are_rejected();
     test_component_response_is_serialized();
     return 0;
 }
