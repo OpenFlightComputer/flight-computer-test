@@ -4,9 +4,26 @@
 
 Milestone 10 — discrete status LED tests: **complete and committed**.
 
-Milestone 11 — WS2812 configurable-colour operator test: **firmware driver committed as `8685611`; Python orchestration implemented in the working tree, pending owner review**.
+Milestone 11 — WS2812 configurable-colour operator test: **complete and committed as `e2565f3`**.
+
+Milestone 12 — BMI270 live-motion operator test: **implemented in the working tree, pending owner review**.
 
 ## In progress
+
+### Milestone 12 — BMI270 live-motion operator test
+
+- Resolved the IMU's previously ambiguous PB3/PB4/PB5 route to SPI3 alternate function 6 in the board configuration. SPI1 remains reserved for the microSD route.
+- Added a board-specific SPI3 adapter: PD2 selects the BMI270, and a cautious 656.25 kHz SPI clock derives from the 42 MHz APB1 peripheral clock. The adapter also owns the microsecond timing callback used by the official driver.
+- Pinned Bosch's BSD-3-Clause BMI270 SensorAPI `v2.113.0` as a firmware submodule. A narrow local driver supplies its SPI read/write callbacks, configures raw 100 Hz accelerometer and gyroscope sampling, and exposes raw signed axes.
+- Added a non-terminal `imu_ready` event and 10 Hz `imu_sample` structured events. Firmware initializes the BMI270 once on its first service, then otherwise returns promptly to the normal USB/application loop between scheduled samples.
+- Added a tester-side Rich live table, raw sample persistence, and a background `Y/n` confirmation prompt. Enter accepts; `n` records failure. The tester sends the usual stop request before persisting the operator decision.
+- Extended the event protocol with an optional typed `data` object while preserving existing no-data events.
+
+#### Milestone 12 validation
+
+- All 72 existing board-tester unit tests pass in the uv-managed Python 3.12 environment.
+- Debug and Release firmware images build with strict warnings-as-errors. The Release image uses 46,876 bytes Flash (4.47%) and 31,792 bytes static RAM (24.26%).
+- Actual BMI270 identity/configuration, physical motion readings, and console interaction remain hardware acceptance items because the board is not present.
 
 ### Milestone 11 — WS2812 configurable-colour operator test
 
@@ -202,7 +219,6 @@ Milestone 11 — WS2812 configurable-colour operator test: **firmware driver com
 - STM32CubeProgrammer is not installed on this Mac, and no ST-Link or Flight Computer board is available. Discovery, real programming, verification, and reset therefore remain hardware/tool acceptance items despite full mocked boundary coverage.
 - Homebrew Python was upgraded from 3.14.6 to 3.14.7, but `pyexpat`, `venv`, and pip bootstrapping still fail on macOS 26.2 because the bottle expects an Expat symbol absent from that OS release. This is a known Homebrew/macOS issue; macOS 26.3 or later is the supported system-level fix. The uv-managed project environment is unaffected.
 - Hardware is not currently available. HSE startup, 168 MHz operation, application-loop execution, and SWD flashing remain on-board validation items rather than claimed results.
-- Choose and document the BMI270 MCU SPI instance. PB3/PB4/PB5 support more than one SPI alternate-function mapping; the routed hardware does not itself select one.
 - Confirm whether PC10/PC11 (`RP1_RX`/`RP1_TX`) are intended to use UART4 or USART3 and document signal naming from both MCU and external-device perspectives.
 - Confirm the intended timer/output mode for PC6–PC9 ESC signals when motor-interface testing enters scope; it is explicitly outside V1.
 - Resolve the discrete LED polarity before Milestone 11. Both the exported schematic netlist and PCB connect D4/D5 pin 2 (`A`) to GND and pin 1 (`K`) toward the MCU through a resistor, which appears reversed for the standard KiCad LED symbol.

@@ -50,9 +50,9 @@ Directions are from the MCU perspective. Alternate functions follow the STM32F40
 | PA13 | SWDIO | Bidirectional | SWD data | JTMS/SWDIO, AF0 | J5 pin 2 | Programming and debug |
 | PA14 | SWCLK | Input | SWD clock | JTCK/SWCLK, AF0 | J5 pin 3 | Programming and debug |
 | PB0 | CURR_ADC | Analog input | ESC current sense | ADC1_IN8 | Divider/filter from ESC_CURR | Outside V1 |
-| PB3 | IMU_SPI_SCK | Output | BMI270 SPI clock | SPI instance/AF TBD | U1 SCX | BMI270 test |
-| PB4 | IMU_SPI_MISO | Input | BMI270 SPI data out | SPI instance/AF TBD | U1 SDO | BMI270 test |
-| PB5 | IMU_SPI_MOSI | Output | BMI270 SPI data in | SPI instance/AF TBD | U1 SDX | BMI270 test |
+| PB3 | IMU_SPI_SCK | Output | BMI270 SPI clock | SPI3 SCK AF6 | U1 SCX | BMI270 test |
+| PB4 | IMU_SPI_MISO | Input | BMI270 SPI data out | SPI3 MISO AF6 | U1 SDO | BMI270 test |
+| PB5 | IMU_SPI_MOSI | Output | BMI270 SPI data in | SPI3 MOSI AF6 | U1 SDX | BMI270 test |
 | PB6 | IMU_INT2 | Input | BMI270 interrupt 2 | GPIO/EXTI | U1 INT2 | BMI270 test |
 | PB9 | GPS_PPS | Input | GPS pulse per second | GPIO/EXTI or timer capture TBD | GPS connector/test point path | Future timing test |
 | PB10 | I2C_SCL | Bidirectional/open-drain | BMP388 clock | I2C2_SCL, AF4 | U3 SCK with pull-up | BMP388 test |
@@ -79,7 +79,7 @@ Signal names such as `GPS_RX` and `RP1_RX` appear to be named from the external 
 ## Interface observations
 
 - The BMP388 is wired for I2C: CSB is tied to +3.3 V and SDO is tied to GND. Its interrupt pin is unconnected.
-- The BMI270 is routed as a four-wire SPI device. PB3/PB4/PB5 can support multiple STM32 SPI alternate mappings, so firmware must select and document one consistently rather than infer it from the net names.
+- The BMI270 is routed as a four-wire SPI device. The manufacturing firmware selects SPI3 alternate function 6 on PB3/PB4/PB5, leaving SPI1's PA5/PA6/PA7 route for the microSD card.
 - The microSD socket is routed in SPI mode through SPI1 pins and includes a dedicated card-detect signal.
 - USB-C D+/D− route to the STM32 OTG FS pins. CC1 and CC2 each have pull-down resistors. VBUS reaches PA9 through a divider/sense path rather than a direct net label.
 - The SWD header exposes the complete V1 programming set required by the board-tester workflow.

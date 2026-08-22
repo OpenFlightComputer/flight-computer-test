@@ -28,6 +28,7 @@ board_support and STM32 HAL
 | --- | --- |
 | Manufacturing firmware | `0.1.0` from the CMake project version |
 | STM32CubeF4 | `v1.28.3`, submodule commit `94cae6e83f00e276a11957e7833c01ac3d0bd7af` |
+| Bosch BMI270 SensorAPI | `v2.113.0`, submodule commit `41129fcfe39c583ee5462d79195741945d51c1fe` |
 | CMSIS STM32F4 device package | commit `3c77349ce04c8af401454cc51f85ea9a50e34fc1` |
 | STM32F4 HAL driver | commit `b6f0ed3829f3829eb358a2e7417d80bba1a42db7` |
 | Arm GNU Toolchain | `15.3.rel1` (`arm-none-eabi-gcc` 15.3.1) |
@@ -54,6 +55,7 @@ After cloning the repository, initialize the pinned STM32CubeF4 package and only
 
 ```bash
 git submodule update --init firmware/manufacturing_test/third_party/STM32CubeF4
+git submodule update --init firmware/manufacturing_test/third_party/BMI270_SensorAPI
 git -C firmware/manufacturing_test/third_party/STM32CubeF4 submodule update --init Drivers/CMSIS/Device/ST/STM32F4xx Drivers/STM32F4xx_HAL_Driver
 ```
 

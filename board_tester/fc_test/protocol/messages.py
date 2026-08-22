@@ -45,6 +45,7 @@ class ComponentTestEvent:
     command_id: int
     test_type: str
     event: str
+    data: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -220,11 +221,17 @@ def decode_component_test_message(
         raise ProtocolMessageError(f"device rejected component test: {_require_string(response, 'error', 'response')}")
     message_type = _require_string(response, "type", "response")
     if message_type == "TEST_EVENT":
-        _require_keys(response, {"protocol_version", "type", "command_id", "test_type", "event"}, "response")
+        allowed = {"protocol_version", "type", "command_id", "test_type", "event", "data"}
+        if set(response) - allowed or not {"protocol_version", "type", "command_id", "test_type", "event"}.issubset(response):
+            raise ProtocolMessageError("response has unexpected TEST_EVENT fields")
+        data = response.get("data")
+        if data is not None and not isinstance(data, dict):
+            raise ProtocolMessageError("response.data must be an object")
         return ComponentTestEvent(
             _require_matching_command_id(response, expected_command_id),
             _require_matching_test_type(response, expected_test_type),
             _require_string(response, "event", "response"),
+            data,
         )
     if message_type in {"TEST_STARTED", "TEST_COMPLETED", "TEST_STOPPED"}:
         _require_keys(response, {"protocol_version", "type", "command_id", "test_type", "status"}, "response")

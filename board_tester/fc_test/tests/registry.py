@@ -2,6 +2,7 @@
 
 from fc_test.tests.base import GenericComponentTestHandler
 from fc_test.tests.rgb_led.handler import RgbLedTestHandler
+from fc_test.tests.imu.handler import ImuTestHandler
 from fc_test.tests.status_leds.handler import StatusLedTestHandler
 
 
@@ -12,4 +13,6 @@ def create_handler(test_type: str):
         return StatusLedTestHandler("green")
     if test_type == "rgb_led":
         return RgbLedTestHandler()
+    if test_type == "imu":
+        return ImuTestHandler()
     return GenericComponentTestHandler()

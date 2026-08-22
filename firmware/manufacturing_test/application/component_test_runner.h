@@ -41,6 +41,8 @@ const char *component_test_runner_active_type(const component_test_runner_t *run
 uint32_t component_test_runner_active_command_id(
     const component_test_runner_t *runner
 );
-const char *component_test_runner_event(const component_test_runner_t *runner);
+const component_test_event_t *component_test_runner_event(
+    const component_test_runner_t *runner
+);
 
 #endif

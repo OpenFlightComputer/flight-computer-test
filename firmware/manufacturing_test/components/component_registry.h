@@ -21,11 +21,28 @@ typedef struct {
     uint8_t blue;
 } component_test_parameters_t;
 
+/* Event payloads are kept small and typed so component code never formats JSON. */
+typedef enum {
+    COMPONENT_TEST_EVENT_MESSAGE = 0,
+    COMPONENT_TEST_EVENT_IMU_SAMPLE = 1,
+} component_test_event_kind_t;
+
+typedef struct {
+    component_test_event_kind_t kind;
+    const char *name;
+    int16_t acceleration_x;
+    int16_t acceleration_y;
+    int16_t acceleration_z;
+    int16_t gyroscope_x;
+    int16_t gyroscope_y;
+    int16_t gyroscope_z;
+} component_test_event_t;
+
 typedef struct {
     const char *type;
     void (*start)(const component_test_parameters_t *parameters);
     component_test_process_result_t (*process)(void);
-    const char *(*event)(void);
+    const component_test_event_t *(*event)(void);
     void (*stop)(void);
 } component_test_definition_t;
 

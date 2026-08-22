@@ -76,7 +76,9 @@ uint32_t component_test_runner_active_command_id(
     return runner->active_command_id;
 }
 
-const char *component_test_runner_event(const component_test_runner_t *runner)
+const component_test_event_t *component_test_runner_event(
+    const component_test_runner_t *runner
+)
 {
     return runner->active_definition == NULL || runner->active_definition->event == NULL ?
         NULL : runner->active_definition->event();

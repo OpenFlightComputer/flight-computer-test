@@ -26,7 +26,7 @@ def run_component_test(
     *,
     command_id: int,
     test_type: str,
-    on_event: Callable[[ComponentTestEvent], None],
+    on_event: Callable[[ComponentTestEvent], ComponentTestCompletion | None],
     on_started: Callable[[], ComponentTestCompletion | None] | None = None,
     parameters: dict[str, int] | None = None,
 ) -> ComponentTestCompletion:
@@ -62,7 +62,9 @@ def run_component_test(
         except UsbTimeoutError:
             continue
         if isinstance(message, ComponentTestEvent):
-            on_event(message)
+            completion = on_event(message)
+            if completion is not None:
+                return completion
         elif isinstance(message, ComponentTestCompletion):
             return message
         else:

@@ -71,6 +71,20 @@ class MessageTests(unittest.TestCase):
         self.assertEqual(event.event, "operator_confirmation_required")
         self.assertEqual(completion, ComponentTestCompletion(2, "rgb_led", "passed"))
 
+    def test_imu_event_preserves_structured_raw_axes(self) -> None:
+        event = decode_component_test_message(
+            b'{"protocol_version":1,"type":"TEST_EVENT","command_id":2,'
+            b'"test_type":"imu","event":"imu_sample","data":{'
+            b'"acceleration_raw":{"x":12,"y":-34,"z":56},'
+            b'"gyroscope_raw":{"x":-78,"y":90,"z":-12}}}',
+            expected_command_id=2,
+            expected_test_type="imu",
+        )
+
+        self.assertIsInstance(event, ComponentTestEvent)
+        self.assertEqual(event.data["acceleration_raw"]["y"], -34)
+        self.assertEqual(event.data["gyroscope_raw"]["x"], -78)
+
     def test_rgb_parameters_are_encoded_as_raw_bytes(self) -> None:
         encoded = encode_run_component_test(
             command_id=2,

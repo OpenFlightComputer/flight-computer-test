@@ -422,23 +422,29 @@ bool json_protocol_build_test_response(
 bool json_protocol_build_test_event(
     uint32_t command_id,
     const char *test_type,
-    const char *event,
+    const component_test_event_t *event,
     char *destination,
     size_t capacity,
     size_t *length
 )
 {
-    if (test_type == NULL || event == NULL) {
+    if (test_type == NULL || event == NULL || event->name == NULL) {
         return false;
     }
-    const int written = snprintf(
-        destination,
-        capacity,
+    const int written = event->kind == COMPONENT_TEST_EVENT_IMU_SAMPLE ? snprintf(
+        destination, capacity,
+        "{\"protocol_version\":1,\"type\":\"TEST_EVENT\",\"command_id\":%lu,"
+        "\"test_type\":\"%s\",\"event\":\"%s\",\"data\":{"
+        "\"acceleration_raw\":{\"x\":%d,\"y\":%d,\"z\":%d},"
+        "\"gyroscope_raw\":{\"x\":%d,\"y\":%d,\"z\":%d}}}",
+        (unsigned long)command_id, test_type, event->name,
+        event->acceleration_x, event->acceleration_y, event->acceleration_z,
+        event->gyroscope_x, event->gyroscope_y, event->gyroscope_z
+    ) : snprintf(
+        destination, capacity,
         "{\"protocol_version\":1,\"type\":\"TEST_EVENT\","
         "\"command_id\":%lu,\"test_type\":\"%s\",\"event\":\"%s\"}",
-        (unsigned long)command_id,
-        test_type,
-        event
+        (unsigned long)command_id, test_type, event->name
     );
 
     if (written < 0 || (size_t)written >= capacity) {

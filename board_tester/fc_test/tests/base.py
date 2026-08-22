@@ -45,7 +45,7 @@ class ComponentTestHandler(ABC):
         """Perform optional local preparation before the firmware command."""
 
     @abstractmethod
-    def handle_event(self, event: ComponentTestEvent) -> None:
+    def handle_event(self, event: ComponentTestEvent) -> ComponentTestCompletion | None:
         """Present and record a component-specific non-terminal event."""
 
     @abstractmethod
@@ -64,9 +64,10 @@ class GenericComponentTestHandler(ComponentTestHandler):
         self._events = []
         self._output(f"Starting component test: {definition.type}")
 
-    def handle_event(self, event: ComponentTestEvent) -> None:
+    def handle_event(self, event: ComponentTestEvent) -> ComponentTestCompletion | None:
         self._events.append(event.event)
         self._output(f"{event.test_type}: {event.event}")
+        return None
 
     def finish(self, completion: ComponentTestCompletion) -> ComponentTestResult:
         return ComponentTestResult(

@@ -89,12 +89,8 @@
   "buses": {
     "imu_spi": {
       "type": "spi",
-      "peripheral": null,
-      "selection_required": true,
-      "candidates": [
-        "SPI1_AF5",
-        "SPI3_AF6"
-      ],
+      "peripheral": "SPI3_AF6",
+      "selection_required": false,
       "clock": "PB3",
       "miso": "PB4",
       "mosi": "PB5"
@@ -210,19 +206,19 @@
       "net": "IMU_SPI_SCK",
       "direction": "output",
       "role": "imu_spi_clock",
-      "mode": "SPI1_SCK_AF5_or_SPI3_SCK_AF6"
+      "mode": "SPI3_SCK_AF6"
     },
     "PB4": {
       "net": "IMU_SPI_MISO",
       "direction": "input",
       "role": "imu_spi_miso",
-      "mode": "SPI1_MISO_AF5_or_SPI3_MISO_AF6"
+      "mode": "SPI3_MISO_AF6"
     },
     "PB5": {
       "net": "IMU_SPI_MOSI",
       "direction": "output",
       "role": "imu_spi_mosi",
-      "mode": "SPI1_MOSI_AF5_or_SPI3_MOSI_AF6"
+      "mode": "SPI3_MOSI_AF6"
     },
     "PB6": {
       "net": "IMU_INT2",

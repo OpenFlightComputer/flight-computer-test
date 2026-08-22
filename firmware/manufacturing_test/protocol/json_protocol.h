@@ -2,6 +2,7 @@
 #define OPENFLIGHTCOMPUTER_JSON_PROTOCOL_H
 
 #include "session_metadata.h"
+#include "component_registry.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -61,7 +62,7 @@ bool json_protocol_build_test_response(
 bool json_protocol_build_test_event(
     uint32_t command_id,
     const char *test_type,
-    const char *event,
+    const component_test_event_t *event,
     char *destination,
     size_t capacity,
     size_t *length

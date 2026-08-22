@@ -146,6 +146,7 @@ add_library(stm32cube_f4 STATIC
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_pwr_ex.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_rcc.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_rcc_ex.c"
+    "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_spi.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_tim.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_tim_ex.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_ll_usb.c"
@@ -178,16 +179,21 @@ add_executable(manufacturing_test
     application/session_metadata.c
     application/session_protocol.c
     components/component_registry.c
+    components/bmi270/bmi270_test.c
     components/rgb_led/rgb_led_test.c
     components/rgb_led/ws2812_encoder.c
     components/status_leds/status_led_test.c
     board_support/flightcomputer_v1/stm32f4xx_it.c
+    board_support/flightcomputer_v1/imu_spi.c
     board_support/flightcomputer_v1/system_clock.c
     board_support/flightcomputer_v1/usb_device_port.c
     protocol/newline_framer.c
     protocol/json_protocol.c
     protocol/usb_cdc_transport.c
     protocol/usb_descriptors.c
+    drivers/bmi270/bmi270_driver.c
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/BMI270_SensorAPI/bmi2.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/BMI270_SensorAPI/bmi270.c"
     "${STM32_DEVICE_ROOT}/Source/Templates/gcc/startup_stm32f405xx.s"
 )
 
@@ -195,8 +201,10 @@ target_include_directories(manufacturing_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/application"
     "${CMAKE_CURRENT_SOURCE_DIR}/board_support/flightcomputer_v1"
     "${CMAKE_CURRENT_SOURCE_DIR}/components"
+    "${CMAKE_CURRENT_SOURCE_DIR}/drivers"
     "${CMAKE_CURRENT_SOURCE_DIR}/protocol"
     "${CMAKE_CURRENT_BINARY_DIR}/generated"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/BMI270_SensorAPI"
 )
 
 target_link_libraries(manufacturing_test PRIVATE stm32cube_f4)
