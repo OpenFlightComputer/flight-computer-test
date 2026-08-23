@@ -2,7 +2,7 @@
 
 This directory contains the computer-side OpenFlightComputer manufacturing and acceptance-test software.
 
-The package owns configuration loading, tooling checks, firmware building, STM32CubeProgrammer/ST-Link flashing, USB CDC discovery/connection/newline framing, session validation, and incremental result persistence. Component-test orchestration enters in a later milestone.
+The package owns configuration loading, tooling checks, firmware building, STM32CubeProgrammer/ST-Link flashing, USB CDC discovery and framing, session validation, ordered component-test orchestration, operator interaction, live sensor displays, and incremental result persistence.
 
 Python versions, dependencies, and the development environment are managed by uv. The committed `.python-version` requests Python 3.12, `pyproject.toml` declares package metadata and compatibility, and `uv.lock` records the resolved environment. These files are complementary parts of one uv workflow rather than separate version managers.
 
@@ -42,3 +42,5 @@ pyserial owns the portable operating-system serial access. The connection disabl
 Zero probes, ambiguous multiple probes or USB ports, programming failure, verification failure, reset failure, missing tools, serial-open failures, and timeouts produce concise errors without Python tracebacks. Programming uses SWD connect-under-reset at 1 MHz, requires immediate verification, and never automatically mass-erases, changes option bytes, or disables protection.
 
 Device UID, MCU identity, board identity, firmware metadata, and capabilities are session-initialization data returned by `START_TEST`. Firmware version and revision are recorded for traceability, while board identity and required capabilities are validated before component dispatch. Firmware may advertise extra capabilities; it cannot omit one declared by the board. These are deliberately not modeled as an `identity` component test.
+
+After initialization, the tester dispatches the configured tests in order. Small handlers own component-specific prompts and report details; shared lifecycle code owns protocol correlation and the common live-operator flow. The final terminal table lists every configured test as PASS, FAIL, or NOT RUN and derives the full-test result from those component outcomes.

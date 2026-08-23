@@ -25,9 +25,13 @@ static void fake_stop(void)
     stop_count++;
 }
 
-static const char *fake_event(void)
+static const component_test_event_t *fake_event(void)
 {
-    return "operator_confirmation_required";
+    static const component_test_event_t event = {
+        .kind = COMPONENT_TEST_EVENT_MESSAGE,
+        .name = "operator_confirmation_required",
+    };
+    return &event;
 }
 
 static const component_test_definition_t fake_definition = {
@@ -62,7 +66,7 @@ static void test_runner_keeps_one_test_active_until_completion(void)
     next_result = COMPONENT_TEST_PROCESS_EVENT;
     assert(component_test_runner_process(&runner) == COMPONENT_TEST_RUNNER_UPDATE_EVENT);
     assert(process_count == 2U);
-    assert(strcmp(component_test_runner_event(&runner),
+    assert(strcmp(component_test_runner_event(&runner)->name,
         "operator_confirmation_required") == 0);
 
     next_result = COMPONENT_TEST_PROCESS_PASSED;

@@ -201,6 +201,7 @@ add_executable(manufacturing_test
     protocol/usb_descriptors.c
     drivers/bmi270/bmi270_driver.c
     drivers/bmp388/bmp388_driver.c
+    drivers/sd_card/sd_card_csd.c
     drivers/sd_card/sd_card_driver.c
     hardware_abstraction/spi_device.c
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/BMI270_SensorAPI/bmi2.c"

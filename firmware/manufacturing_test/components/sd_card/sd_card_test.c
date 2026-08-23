@@ -95,7 +95,9 @@ component_test_process_result_t sd_card_test_process(void)
         return COMPONENT_TEST_PROCESS_EVENT;
 
     case SD_CARD_WAITING_FOR_REMOVAL:
-        if (!stable_card_state(false)) { return COMPONENT_TEST_PROCESS_RUNNING; }
+        if (!stable_card_state(false)) {
+            return COMPONENT_TEST_PROCESS_RUNNING;
+        }
         state = SD_CARD_ANNOUNCE_INSERTION;
         matching_polls = 0U;
         message("sd_card_removed");
@@ -107,7 +109,9 @@ component_test_process_result_t sd_card_test_process(void)
         return COMPONENT_TEST_PROCESS_EVENT;
 
     case SD_CARD_WAITING_FOR_INSERTION:
-        if (!stable_card_state(true)) { return COMPONENT_TEST_PROCESS_RUNNING; }
+        if (!stable_card_state(true)) {
+            return COMPONENT_TEST_PROCESS_RUNNING;
+        }
         state = SD_CARD_INITIALIZING;
         message("sd_card_detected");
         return COMPONENT_TEST_PROCESS_EVENT;
@@ -122,33 +126,42 @@ component_test_process_result_t sd_card_test_process(void)
         return COMPONENT_TEST_PROCESS_EVENT;
 
     case SD_CARD_WRITING:
-        if (!card_is_present() || !sd_card_driver_write_test_block(&information, current_block)) {
+        if (!card_is_present() ||
+            !sd_card_driver_write_test_block(&information, current_block)) {
             state = SD_CARD_FAILED;
             return COMPONENT_TEST_PROCESS_FAILED;
         }
-        if (++current_block < SD_CARD_TEST_BLOCK_COUNT) { return COMPONENT_TEST_PROCESS_RUNNING; }
+        if (++current_block < SD_CARD_TEST_BLOCK_COUNT) {
+            return COMPONENT_TEST_PROCESS_RUNNING;
+        }
         state = SD_CARD_VERIFYING;
         current_block = 0U;
         card_information_event("sd_card_written");
         return COMPONENT_TEST_PROCESS_EVENT;
 
     case SD_CARD_VERIFYING:
-        if (!card_is_present() || !sd_card_driver_verify_test_block(&information, current_block)) {
+        if (!card_is_present() ||
+            !sd_card_driver_verify_test_block(&information, current_block)) {
             state = SD_CARD_FAILED;
             return COMPONENT_TEST_PROCESS_FAILED;
         }
-        if (++current_block < SD_CARD_TEST_BLOCK_COUNT) { return COMPONENT_TEST_PROCESS_RUNNING; }
+        if (++current_block < SD_CARD_TEST_BLOCK_COUNT) {
+            return COMPONENT_TEST_PROCESS_RUNNING;
+        }
         state = SD_CARD_CLEANING_UP;
         current_block = 0U;
         card_information_event("sd_card_verified");
         return COMPONENT_TEST_PROCESS_EVENT;
 
     case SD_CARD_CLEANING_UP:
-        if (!card_is_present() || !sd_card_driver_clear_test_block(&information, current_block)) {
+        if (!card_is_present() ||
+            !sd_card_driver_clear_test_block(&information, current_block)) {
             state = SD_CARD_FAILED;
             return COMPONENT_TEST_PROCESS_FAILED;
         }
-        if (++current_block < SD_CARD_TEST_BLOCK_COUNT) { return COMPONENT_TEST_PROCESS_RUNNING; }
+        if (++current_block < SD_CARD_TEST_BLOCK_COUNT) {
+            return COMPONENT_TEST_PROCESS_RUNNING;
+        }
         state = SD_CARD_COMPLETE;
         card_information_event("sd_card_cleaned_up");
         return COMPONENT_TEST_PROCESS_EVENT;

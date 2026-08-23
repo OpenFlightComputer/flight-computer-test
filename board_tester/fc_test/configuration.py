@@ -9,18 +9,7 @@ from typing import Any
 from uuid import UUID
 
 from fc_test.tests.rgb_led.colours import ColourError, colour_to_rgb
-
-
-SUPPORTED_TEST_TYPES = frozenset(
-    {
-        "status_led_red",
-        "status_led_green",
-        "rgb_led",
-        "imu",
-        "barometer",
-        "sd_card",
-    }
-)
+from fc_test.test_catalog import SUPPORTED_TEST_TYPES
 
 
 class ConfigurationError(ValueError):
@@ -371,6 +360,11 @@ def load_test_configuration(path: Path) -> TestConfiguration:
                 raise ConfigurationError(
                     path, f"{location}.parameters.colour: {error}"
                 ) from error
+        elif test_type != "rgb_led" and parameters:
+            raise ConfigurationError(
+                path,
+                f"{location}.parameters must be empty for {test_type}",
+            )
         definitions.append(
             TestDefinition(type=test_type, enabled=enabled, parameters=parameters)
         )

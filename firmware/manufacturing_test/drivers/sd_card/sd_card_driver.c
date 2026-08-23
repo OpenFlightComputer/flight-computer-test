@@ -1,5 +1,7 @@
 #include "sd_card_driver.h"
 
+#include "sd_card_csd.h"
+
 #include "spi_devices.h"
 #include "stm32f4xx_hal.h"
 
@@ -24,6 +26,7 @@
 #define SD_DATA_TIMEOUT_MS 250U
 #define SD_DATA_START_TOKEN 0xFEU
 #define SD_DATA_ACCEPTED 0x05U
+#define SD_TEST_AREA_DISTANCE_FROM_END 16U
 
 static spi_device_t *device;
 static bool high_capacity;
@@ -186,29 +189,12 @@ static bool read_csd(sd_card_information_t *information)
     }
     deselect_card();
 
-    if ((csd[0] >> 6U) == 1U) {
-        /* CSD v2: capacity = (C_SIZE + 1) × 1024 sectors. */
-        const uint32_t c_size =
-            ((uint32_t)(csd[7] & 0x3FU) << 16U) |
-            ((uint32_t)csd[8] << 8U) |
-            csd[9];
-        information->sector_count = (uint64_t)(c_size + 1U) * 1024U;
-    } else {
-        /* CSD v1: capacity uses C_SIZE, C_SIZE_MULT, and READ_BL_LEN. */
-        const uint32_t c_size =
-            ((uint32_t)(csd[6] & 0x03U) << 10U) |
-            ((uint32_t)csd[7] << 2U) |
-            (csd[8] >> 6U);
-        const uint32_t c_mult =
-            ((uint32_t)(csd[9] & 0x03U) << 1U) |
-            (csd[10] >> 7U);
-        const uint32_t read_length = csd[5] & 0x0FU;
-        information->sector_count = ((uint64_t)(c_size + 1U) <<
-            (c_mult + 2U + read_length)) / SD_BLOCK_SIZE;
+    if (!sd_card_parse_csd(csd, &information->sector_count)) {
+        return false;
     }
 
-    /* Eight test sectors plus a 16-sector safety margin must fit on the card. */
-    return information->sector_count > SD_CARD_TEST_BLOCK_COUNT + 16U;
+    /* The test starts 16 sectors before the end and consumes eight sectors. */
+    return information->sector_count > SD_TEST_AREA_DISTANCE_FROM_END;
 }
 
 bool sd_card_driver_initialize(sd_card_information_t *information)
@@ -247,13 +233,18 @@ bool sd_card_driver_initialize(sd_card_information_t *information)
         deselect_card();
         return false;
     }
-    version_two = response == 1U &&
-        read_bytes(r7, sizeof(r7)) &&
-        r7[2] == 1U &&
-        r7[3] == 0xAAU;
-
-    /* An illegal-command R1 bit is the expected CMD8 response from an SDSC card. */
-    if (response != 1U && (response & 0x04U) == 0U) {
+    if (response == 1U) {
+        version_two = read_bytes(r7, sizeof(r7)) &&
+            r7[2] == 1U &&
+            r7[3] == 0xAAU;
+        if (!version_two) {
+            deselect_card();
+            return false;
+        }
+    } else if (response == 5U) {
+        /* R1=idle+illegal-command is the expected CMD8 response from a v1 card. */
+        version_two = false;
+    } else {
         deselect_card();
         return false;
     }
@@ -265,8 +256,13 @@ bool sd_card_driver_initialize(sd_card_information_t *information)
      */
     const uint32_t started = HAL_GetTick();
     do {
+        uint8_t application_response;
+
         if (!select_card() ||
-            !command(SD_COMMAND_APP_COMMAND, 0U, 0xFFU, &response) ||
+            !command(
+                SD_COMMAND_APP_COMMAND, 0U, 0xFFU, &application_response
+            ) ||
+            (application_response != 0U && application_response != 1U) ||
             !command(
                 SD_ACOMMAND_SEND_OP_COND,
                 version_two ? 0x40000000U : 0U,
@@ -291,7 +287,7 @@ bool sd_card_driver_initialize(sd_card_information_t *information)
         deselect_card();
         return false;
     }
-    high_capacity = (ocr[0] & 0x40U) != 0U;
+    high_capacity = version_two && (ocr[0] & 0x40U) != 0U;
     deselect_card();
 
     /* 6. SDSC needs CMD16 to select 512-byte blocks; SDHC/SDXC already use them. */
@@ -309,7 +305,9 @@ bool sd_card_driver_initialize(sd_card_information_t *information)
     if (!read_csd(information)) {
         return false;
     }
-    information->test_sector = (uint32_t)(information->sector_count - 16U);
+    information->test_sector = (uint32_t)(
+        information->sector_count - SD_TEST_AREA_DISTANCE_FROM_END
+    );
 
     /* 8. Initialization is done: raise SPI1 from 328.125 kHz to 21 MHz. */
     return spi_device_set_prescaler(device, SPI_BAUDRATEPRESCALER_4);

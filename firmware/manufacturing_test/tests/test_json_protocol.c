@@ -152,6 +152,10 @@ static void test_component_response_is_serialized(void)
 {
     char response[256];
     size_t length;
+    const component_test_event_t event = {
+        .kind = COMPONENT_TEST_EVENT_MESSAGE,
+        .name = "operator_confirmation_required",
+    };
 
     assert(json_protocol_build_test_response(
         "TEST_STARTED", 8U, "rgb_led", "running", response,
@@ -161,7 +165,7 @@ static void test_component_response_is_serialized(void)
     assert(strstr(response, "\"type\":\"TEST_STARTED\"") != NULL);
     assert(strstr(response, "\"test_type\":\"rgb_led\"") != NULL);
     assert(json_protocol_build_test_event(
-        8U, "rgb_led", "operator_confirmation_required", response,
+        8U, "rgb_led", &event, response,
         sizeof(response), &length
     ));
     assert(strstr(response, "\"type\":\"TEST_EVENT\"") != NULL);

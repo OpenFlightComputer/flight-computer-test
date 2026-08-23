@@ -85,6 +85,17 @@ class ConfigurationLoadingTests(unittest.TestCase):
             with self.assertRaisesRegex(ConfigurationError, "CSS3 name"):
                 load_test_configuration(paths.test)
 
+    def test_unused_component_parameters_are_rejected(self) -> None:
+        with self._configuration_tree() as paths:
+            test_value = self._valid_test_value()
+            test_value["tests"][0]["parameters"] = {"threshold": 10}
+            self._write_json(paths.test, test_value)
+
+            with self.assertRaisesRegex(
+                ConfigurationError, "parameters must be empty for imu"
+            ):
+                load_test_configuration(paths.test)
+
     def test_disabled_test_is_preserved_but_excluded_from_enabled_tests(self) -> None:
         with self._configuration_tree() as paths:
             test_value = self._valid_test_value()

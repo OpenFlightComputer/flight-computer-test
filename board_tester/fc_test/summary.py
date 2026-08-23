@@ -9,6 +9,7 @@ from rich.table import Table
 from rich.text import Text
 
 from fc_test.configuration import TestDefinition
+from fc_test.test_catalog import TEST_DISPLAY_NAMES
 
 
 @dataclass(frozen=True, slots=True)
@@ -17,16 +18,6 @@ class TestOutcome:
 
     test_type: str
     status: str
-
-
-_DISPLAY_NAMES = {
-    "status_led_red": "Status LED Red",
-    "status_led_green": "Status LED Green",
-    "rgb_led": "RGB LED",
-    "imu": "IMU",
-    "barometer": "Barometer",
-    "sd_card": "SD Card",
-}
 
 
 def print_test_summary(
@@ -61,7 +52,9 @@ def print_test_summary(
             result = Text(status.upper(), style="bold yellow")
             all_passed = False
             all_ran = False
-        table.add_row(_DISPLAY_NAMES.get(definition.type, definition.type), result)
+        table.add_row(
+            TEST_DISPLAY_NAMES.get(definition.type, definition.type), result
+        )
 
     terminal.print()
     terminal.print(table)

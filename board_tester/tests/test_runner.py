@@ -106,7 +106,7 @@ class RunnerTests(unittest.TestCase):
                 component_test_workflow=lambda _connection, *, command_id, test_type, on_event: ComponentTestCompletion(
                     command_id, test_type, "passed"
                 ),
-                handler_factory=lambda: GenericComponentTestHandler(
+                handler_factory=lambda _test_type: GenericComponentTestHandler(
                     output=lambda _message: None
                 ),
                 component_result_writer=lambda *_arguments, **_keywords: None,

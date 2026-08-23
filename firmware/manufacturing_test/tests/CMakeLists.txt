@@ -26,10 +26,13 @@ add_test(NAME newline_framer COMMAND test_newline_framer)
 add_executable(test_json_protocol
     test_json_protocol.c
     ../protocol/json_protocol.c
+    ../protocol/json_component_events.c
+    ../protocol/json_response_builder.c
 )
 
 target_include_directories(test_json_protocol PRIVATE
     ../application
+    ../components
     ../protocol
 )
 target_compile_options(test_json_protocol PRIVATE
@@ -75,3 +78,18 @@ target_compile_options(test_ws2812_encoder PRIVATE
 )
 
 add_test(NAME ws2812_encoder COMMAND test_ws2812_encoder)
+
+add_executable(test_sd_card_csd
+    test_sd_card_csd.c
+    ../drivers/sd_card/sd_card_csd.c
+)
+
+target_include_directories(test_sd_card_csd PRIVATE ../drivers/sd_card)
+target_compile_options(test_sd_card_csd PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Werror
+)
+
+add_test(NAME sd_card_csd COMMAND test_sd_card_csd)

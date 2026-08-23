@@ -24,27 +24,47 @@ static flightcomputer_spi_context_t sd_context = {
     .alternate = GPIO_AF5_SPI1, .cs_port = GPIOC, .cs_pin = GPIO_PIN_4,
     .instance = SPI1, .prescaler = SPI_BAUDRATEPRESCALER_256,
 };
+static bool sd_card_detect_ready;
 
 static void enable_peripheral_clocks(const flightcomputer_spi_context_t *context)
 {
-    if (context->port == GPIOA) { __HAL_RCC_GPIOA_CLK_ENABLE(); }
-    if (context->port == GPIOB) { __HAL_RCC_GPIOB_CLK_ENABLE(); }
-    if (context->cs_port == GPIOC) { __HAL_RCC_GPIOC_CLK_ENABLE(); }
-    if (context->cs_port == GPIOD) { __HAL_RCC_GPIOD_CLK_ENABLE(); }
-    if (context->instance == SPI1) { __HAL_RCC_SPI1_CLK_ENABLE(); }
-    if (context->instance == SPI3) { __HAL_RCC_SPI3_CLK_ENABLE(); }
+    if (context->port == GPIOA) {
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+    }
+    if (context->port == GPIOB) {
+        __HAL_RCC_GPIOB_CLK_ENABLE();
+    }
+    if (context->cs_port == GPIOC) {
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+    }
+    if (context->cs_port == GPIOD) {
+        __HAL_RCC_GPIOD_CLK_ENABLE();
+    }
+    if (context->instance == SPI1) {
+        __HAL_RCC_SPI1_CLK_ENABLE();
+    }
+    if (context->instance == SPI3) {
+        __HAL_RCC_SPI3_CLK_ENABLE();
+    }
 }
 
 static bool initialize(spi_device_t *device)
 {
     flightcomputer_spi_context_t *context = device->context;
     GPIO_InitTypeDef gpio = {0};
-    if (context->ready) { return true; }
+    if (context->ready) {
+        return true;
+    }
     enable_peripheral_clocks(context);
-    gpio.Pin = context->pins; gpio.Mode = GPIO_MODE_AF_PP; gpio.Pull = GPIO_NOPULL;
-    gpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH; gpio.Alternate = context->alternate;
+    gpio.Pin = context->pins;
+    gpio.Mode = GPIO_MODE_AF_PP;
+    gpio.Pull = GPIO_NOPULL;
+    gpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    gpio.Alternate = context->alternate;
     HAL_GPIO_Init(context->port, &gpio);
-    gpio.Pin = context->cs_pin; gpio.Mode = GPIO_MODE_OUTPUT_PP; gpio.Pull = GPIO_NOPULL;
+    gpio.Pin = context->cs_pin;
+    gpio.Mode = GPIO_MODE_OUTPUT_PP;
+    gpio.Pull = GPIO_NOPULL;
     gpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     HAL_GPIO_Init(context->cs_port, &gpio);
     HAL_GPIO_WritePin(context->cs_port, context->cs_pin, GPIO_PIN_SET);
@@ -76,6 +96,7 @@ static void deselect_device(spi_device_t *device)
     flightcomputer_spi_context_t *context = device->context;
     HAL_GPIO_WritePin(context->cs_port, context->cs_pin, GPIO_PIN_SET);
 }
+
 static bool transfer(spi_device_t *device, const uint8_t *tx, uint8_t *rx, size_t length)
 {
     flightcomputer_spi_context_t *context = device->context;
@@ -87,10 +108,15 @@ static bool transfer(spi_device_t *device, const uint8_t *tx, uint8_t *rx, size_
 static bool set_prescaler(spi_device_t *device, uint32_t prescaler)
 {
     flightcomputer_spi_context_t *context = device->context;
-    context->prescaler = prescaler;
-    if (!context->ready) { return true; }
-    (void)HAL_SPI_DeInit(&context->handle);
+    if (!context->ready) {
+        context->prescaler = prescaler;
+        return true;
+    }
+    if (HAL_SPI_DeInit(&context->handle) != HAL_OK) {
+        return false;
+    }
     context->ready = false;
+    context->prescaler = prescaler;
     return initialize(device);
 }
 static const spi_device_operations_t operations = {
@@ -103,15 +129,23 @@ spi_device_t *flightcomputer_v1_imu_spi_device(void) { return &imu_device; }
 spi_device_t *flightcomputer_v1_sd_spi_device(void) { return &sd_device; }
 bool flightcomputer_v1_sd_card_inserted(void)
 {
-    GPIO_InitTypeDef gpio = {0};
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-    gpio.Pin = GPIO_PIN_5; gpio.Mode = GPIO_MODE_INPUT; gpio.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOC, &gpio);
+    if (!sd_card_detect_ready) {
+        GPIO_InitTypeDef gpio = {0};
+
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+        gpio.Pin = GPIO_PIN_5;
+        gpio.Mode = GPIO_MODE_INPUT;
+        gpio.Pull = GPIO_NOPULL;
+        HAL_GPIO_Init(GPIOC, &gpio);
+        sd_card_detect_ready = true;
+    }
     return HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_5) == GPIO_PIN_RESET;
 }
+
 void flightcomputer_v1_delay_us(uint32_t microseconds)
 {
-    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
     const uint32_t start = DWT->CYCCNT;
     const uint32_t cycles = (SystemCoreClock / 1000000U) * microseconds;
     while ((uint32_t)(DWT->CYCCNT - start) < cycles) { __NOP(); }

@@ -30,7 +30,9 @@ Board configuration describes physical hardware and explicitly declares its supp
 
 ## Current state
 
-Milestones 6 and 7 are complete and committed. Milestone 8 is implemented in the working tree for review: before flashing, `run` checks every configured test type against the selected board's declared capabilities. After a valid `START_TEST` response, it records a report and confirms that the firmware identifies the expected board and advertises every board capability. A mismatch marks that report failed and stops before component execution. Physical flashing and USB enumeration remain unverified because STM32CubeProgrammer and hardware are not currently available.
+The complete hardware-independent V1 workflow is implemented. `run` validates the selected board and test policy, builds and flashes manufacturing firmware, establishes a USB session, validates firmware identity and capabilities, executes the six configured component tests in order, persists incremental results, and prints a coloured final summary. The implemented component tests cover both status LEDs, the WS2812 RGB LED, BMI270 motion data, BMP388 pressure and temperature data, and automatic microSD detection/write/read/checksum/cleanup.
+
+Python tests, native firmware tests, and Debug and Release cross-builds run without hardware. Physical SWD flashing, USB behavior, routed peripheral communication, LED polarity and signal levels, sensor readings, and SD-card operation remain hardware-acceptance items because the board is not yet available.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the handoff state, [ROADMAP.md](ROADMAP.md) for planned milestones, [docs/repository-architecture.md](docs/repository-architecture.md) for responsibility boundaries, and [docs/hardware-reference.md](docs/hardware-reference.md) for the reviewed hardware interface.
 

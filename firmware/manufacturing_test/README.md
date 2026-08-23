@@ -2,7 +2,7 @@
 
 This bare-metal firmware is installed temporarily through ST-Link/SWD to exercise Flight Computer V1 hardware under computer-side control. It is not operational flight-control firmware.
 
-The firmware currently provides the STM32F405 foundation plus the firmware half of Milestone 6: USB OTG FS device support, CDC ACM enumeration, interrupt-driven packet transfer, bounded queues, and newline framing. It does not yet interpret protocol messages or execute component tests.
+The firmware provides the complete V1 manufacturing-test side: USB CDC transport, bounded newline framing, allocation-free JSON request handling, session metadata, a single-active-test registry, and component drivers for the status LEDs, WS2812 RGB LED, BMI270, BMP388, and microSD card.
 
 ## Architecture
 
@@ -111,7 +111,7 @@ cmake --preset firmware-debug \
   -DOPENFLIGHTCOMPUTER_USB_IDS_ARE_DEVELOPMENT=OFF
 ```
 
-The device advertises `OpenFlightComputer Manufacturing Test` as a Full-Speed CDC ACM device. Its serial-number descriptor is intentionally absent until Milestone 7 introduces the STM32 factory UID as session identity. The configuration declares a bus-powered maximum of 500 mA.
+The device advertises `OpenFlightComputer Manufacturing Test` as a Full-Speed CDC ACM device. The STM32 factory UID is returned as session metadata rather than as a USB serial-number descriptor. The configuration declares a bus-powered maximum of 500 mA.
 
 ## USB transport
 
@@ -127,7 +127,7 @@ The application loop performs the slower work:
 - two complete received lines and two outgoing lines can be queued;
 - outgoing lines gain exactly one LF terminator and remain stored until the asynchronous USB transfer completes.
 
-The protocol layer exposes complete lines but does not parse JSON or respond to commands yet.
+The application consumes complete lines, strictly parses protocol-version-1 JSON commands, and queues correlated responses. USB interrupt callbacks remain limited to bounded byte movement and completion flags; parsing and component work stay in the main loop.
 
 Run the hardware-independent framing tests with the computer's native C compiler:
 

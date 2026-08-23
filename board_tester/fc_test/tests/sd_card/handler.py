@@ -2,8 +2,16 @@
 
 from __future__ import annotations
 
-from fc_test.protocol.messages import ComponentTestCompletion, ComponentTestEvent
-from fc_test.tests.base import ComponentTestHandler, ComponentTestResult
+from fc_test.protocol.messages import (
+    ComponentTestCompletion,
+    ComponentTestEvent,
+    ProtocolMessageError,
+)
+from fc_test.tests.base import (
+    ComponentTestHandler,
+    ComponentTestResult,
+    require_event_integer,
+)
 
 
 class SdCardTestHandler(ComponentTestHandler):
@@ -36,9 +44,20 @@ class SdCardTestHandler(ComponentTestHandler):
         if event.data is not None:
             self._card = dict(event.data)
             if event.event == "sd_card_initialized":
+                card_type = self._card.get("card_type")
+                if not isinstance(card_type, str) or not card_type:
+                    raise ProtocolMessageError(
+                        "sd_card_initialized data.card_type must be a string"
+                    )
+                sector_count = require_event_integer(
+                    self._card, "sector_count", "sd_card_initialized"
+                )
+                test_sector = require_event_integer(
+                    self._card, "test_sector", "sd_card_initialized"
+                )
                 self._output(
-                    f"{self._card['card_type']}: {self._card['sector_count']:,} sectors; "
-                    f"test starts at sector {self._card['test_sector']:,}."
+                    f"{card_type}: {sector_count:,} sectors; "
+                    f"test starts at sector {test_sector:,}."
                 )
         return None
 

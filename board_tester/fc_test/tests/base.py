@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from fc_test.configuration import TestDefinition
-from fc_test.protocol.messages import ComponentTestCompletion, ComponentTestEvent
+from fc_test.protocol.messages import (
+    ComponentTestCompletion,
+    ComponentTestEvent,
+    ProtocolMessageError,
+)
 from fc_test.protocol.session import FramedConnection
 
 
@@ -74,3 +79,29 @@ class GenericComponentTestHandler(ComponentTestHandler):
             status=completion.status,
             details={"events": list(self._events), "firmware_status": completion.status},
         )
+
+
+def prompt_yes_no(
+    question: str,
+    *,
+    input_reader: Callable[[str], str] = input,
+    output: Callable[[str], None] = print,
+) -> bool:
+    """Ask a Y/n question, accepting Enter as the default yes answer."""
+
+    while True:
+        answer = input_reader(f"{question} [Y/n]: ").strip().lower()
+        if answer in {"", "y", "yes"}:
+            return True
+        if answer in {"n", "no"}:
+            return False
+        output("Please enter Y or n.")
+
+
+def require_event_integer(data: dict[str, object], key: str, event: str) -> int:
+    """Read one exact integer from component event data."""
+
+    value = data.get(key)
+    if type(value) is not int:
+        raise ProtocolMessageError(f"{event} data.{key} must be an integer")
+    return value

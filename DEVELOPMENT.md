@@ -12,9 +12,31 @@ Milestone 13 — BMP388 live environmental operator test: **complete and committ
 
 Milestone 14 — microSD automatic media test: **complete and committed as `c1df3d1`**.
 
-Milestone 15 — complete one-command V1 acceptance workflow: **in progress**.
+Milestone 15 — complete one-command V1 acceptance workflow: **complete and committed**.
 
-## In progress
+## Current review
+
+A full hardware-independent code review is in progress. It covers correctness,
+readability, duplication, file responsibilities, tests, and documentation. The
+review changes remain uncommitted for owner review.
+
+- Consolidated duplicated IMU/barometer live-operator lifecycle handling and
+  duplicated LED Y/n prompts into shared, testable helpers.
+- Centralized supported test metadata, made handler registration explicit, and
+  added strict component-event/status validation so malformed firmware data
+  becomes an actionable protocol failure rather than a Python traceback.
+- Split the Python protocol message implementation into session, component,
+  and shared-validation modules while retaining the existing public imports.
+- Hardened atomic report updates against stale temporary files and protected
+  reserved traceability fields from component detail collisions.
+- Tightened SD-card CMD8, CMD55/ACMD41, OCR, and CSD validation. Extracted the
+  pure CSD decoder into a small independently tested module.
+- Repaired native firmware tests that had drifted behind the structured event
+  and split JSON serializer interfaces.
+- Current hardware-independent validation: 85 Python tests, five native C test
+  executables, and strict Debug and Release firmware builds all pass.
+
+## Recent milestone details
 
 ### Milestone 14 — microSD automatic media test
 
@@ -254,10 +276,10 @@ Milestone 15 — complete one-command V1 acceptance workflow: **in progress**.
 - Hardware is not currently available. HSE startup, 168 MHz operation, application-loop execution, and SWD flashing remain on-board validation items rather than claimed results.
 - Confirm whether PC10/PC11 (`RP1_RX`/`RP1_TX`) are intended to use UART4 or USART3 and document signal naming from both MCU and external-device perspectives.
 - Confirm the intended timer/output mode for PC6–PC9 ESC signals when motor-interface testing enters scope; it is explicitly outside V1.
-- Resolve the discrete LED polarity before Milestone 11. Both the exported schematic netlist and PCB connect D4/D5 pin 2 (`A`) to GND and pin 1 (`K`) toward the MCU through a resistor, which appears reversed for the standard KiCad LED symbol.
+- Confirm the discrete LED polarity on hardware. Both the exported schematic netlist and PCB connect D4/D5 pin 2 (`A`) to GND and pin 1 (`K`) toward the MCU through a resistor, which appears reversed for the standard KiCad LED symbol.
 - Validate WS2812 input-high margin on hardware. LED1 is powered from +5 V while its data input is driven directly from a 3.3 V MCU through R24, with no level shifter shown.
 - Investigate the KiCad CLI DRC crash and obtain a complete DRC report before treating the current PCB as manufacturing-verified.
 
 ## Next milestone
 
-After review and commit of the board-tester half, Milestone 7 will define structured protocol messages, implement `START_TEST`, validate and persist the initial device metadata, and create the initial report. End-to-end USB acceptance still requires a board.
+Complete this review, then perform the remaining hardware-independent hardening and documentation work. Once the board arrives, the priority becomes physical acceptance: SWD programming and reset, clock and USB validation, routed LED behavior, WS2812 signal margin, BMI270 SPI, BMP388 I2C, and microSD detection and destructive media verification.

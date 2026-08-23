@@ -21,7 +21,12 @@ from fc_test.protocol.messages import (
     encode_start_test,
 )
 from fc_test.protocol.session import start_test
-from fc_test.reporting.json_report import create_initial_report, record_session_validation
+from fc_test.reporting.json_report import (
+    ReportError,
+    create_initial_report,
+    record_component_result,
+    record_session_validation,
+)
 from fc_test.session_validation import SessionValidation
 
 
@@ -70,6 +75,21 @@ class MessageTests(unittest.TestCase):
         self.assertIsInstance(event, ComponentTestEvent)
         self.assertEqual(event.event, "operator_confirmation_required")
         self.assertEqual(completion, ComponentTestCompletion(2, "rgb_led", "passed"))
+
+    def test_component_message_requires_type_and_valid_status(self) -> None:
+        with self.assertRaisesRegex(ProtocolMessageError, "response.type"):
+            decode_component_test_message(
+                b'{"protocol_version":1,"command_id":2}',
+                expected_command_id=2,
+                expected_test_type="imu",
+            )
+        with self.assertRaisesRegex(ProtocolMessageError, "invalid for TEST_COMPLETED"):
+            decode_component_test_message(
+                b'{"protocol_version":1,"type":"TEST_COMPLETED",'
+                b'"command_id":2,"test_type":"imu","status":"unknown"}',
+                expected_command_id=2,
+                expected_test_type="imu",
+            )
 
     def test_imu_event_preserves_structured_raw_axes(self) -> None:
         event = decode_component_test_message(
@@ -237,3 +257,12 @@ class ReportingTests(unittest.TestCase):
         self.assertEqual(contents["failure"]["stage"], "session_validation")
         self.assertEqual(contents["session_validation"]["status"], "failed")
         self.assertEqual(contents["results"], [])
+
+    def test_component_details_cannot_replace_traceability_fields(self) -> None:
+        with self.assertRaisesRegex(ReportError, "reserved field"):
+            record_component_result(
+                Path("unused.json"),
+                test_type="imu",
+                status="passed",
+                details={"status": "failed"},
+            )

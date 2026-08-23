@@ -26,7 +26,11 @@ from fc_test.protocol.connection import (
     UsbTransportError,
     open_usb_cdc,
 )
-from fc_test.protocol.messages import ProtocolMessageError, StartTestResponse
+from fc_test.protocol.messages import (
+    ComponentTestCompletion,
+    ProtocolMessageError,
+    StartTestResponse,
+)
 from fc_test.protocol.component_session import run_component_test, stop_component_test
 from fc_test.protocol.session import FramedConnection, start_test
 from fc_test.reporting.json_report import ReportError, create_initial_report
@@ -34,7 +38,7 @@ from fc_test.reporting.json_report import record_session_validation
 from fc_test.reporting.json_report import finalize_component_run, record_component_result
 from fc_test.session_validation import SessionValidation, validate_session
 from fc_test.summary import TestOutcome, print_test_summary
-from fc_test.tests.base import ComponentTestHandler, GenericComponentTestHandler
+from fc_test.tests.base import ComponentTestHandler
 from fc_test.tests.registry import create_handler
 
 
@@ -67,7 +71,16 @@ class SessionValidationWriter(Protocol):
 
 
 class ComponentTestWorkflow(Protocol):
-    def __call__(self, connection, *, command_id: int, test_type: str, on_event): ...
+    def __call__(
+        self,
+        connection,
+        *,
+        command_id: int,
+        test_type: str,
+        on_event,
+        on_started=None,
+        parameters: dict[str, int] | None = None,
+    ) -> ComponentTestCompletion: ...
 
 
 class SummaryWriter(Protocol):
@@ -88,7 +101,7 @@ def run(
     session_validator=validate_session,
     session_validation_writer: SessionValidationWriter = record_session_validation,
     component_test_workflow: ComponentTestWorkflow = run_component_test,
-    handler_factory: Callable[[], ComponentTestHandler] = GenericComponentTestHandler,
+    handler_factory: Callable[[str], ComponentTestHandler] = create_handler,
     component_result_writer=record_component_result,
     component_run_finalizer=finalize_component_run,
     summary_writer: SummaryWriter = print_test_summary,
@@ -162,7 +175,7 @@ def run(
                 for command_id, definition in enumerate(
                     configurations.test.enabled_tests, start=2
                 ):
-                    handler = create_handler(definition.type) if handler_factory is GenericComponentTestHandler else handler_factory()
+                    handler = handler_factory(definition.type)
                     try:
                         result = handler.run(
                             connection,

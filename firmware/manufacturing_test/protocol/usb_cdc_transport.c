@@ -173,7 +173,7 @@ static bool pop_received_byte(uint8_t *byte, bool *overflowed)
 static void process_received_bytes(void)
 {
     uint8_t byte;
-    bool overflowed;
+    bool overflowed = false;
 
     while (pop_received_byte(&byte, &overflowed)) {
         if (overflowed) {
