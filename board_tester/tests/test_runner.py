@@ -24,7 +24,7 @@ from fc_test.tests.base import GenericComponentTestHandler
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-INITIAL_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v001.json"
+CURRENT_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v004.json"
 
 
 class RunnerTests(unittest.TestCase):
@@ -34,7 +34,7 @@ class RunnerTests(unittest.TestCase):
                 [
                     "run",
                     "--config",
-                    str(INITIAL_TEST_CONFIG),
+                    str(CURRENT_TEST_CONFIG),
                     "--port",
                     "/dev/cu.explicit",
                 ]
@@ -42,7 +42,7 @@ class RunnerTests(unittest.TestCase):
 
         self.assertEqual(exit_code, 0)
         runner.assert_called_once_with(
-            INITIAL_TEST_CONFIG,
+            CURRENT_TEST_CONFIG,
             firmware_profile="release",
             probe_serial=None,
             programmer_path=None,
@@ -75,7 +75,7 @@ class RunnerTests(unittest.TestCase):
 
         with redirect_stdout(stdout):
             exit_code = run(
-                INITIAL_TEST_CONFIG,
+                CURRENT_TEST_CONFIG,
                 firmware_workflow=workflow,
                 usb_connection_workflow=usb_connection,
                 start_test_workflow=lambda _connection, *, test_uuid: StartTestResponse(
@@ -89,8 +89,6 @@ class RunnerTests(unittest.TestCase):
                     ),
                     firmware=FirmwareMetadata("0.1.0", "revision"),
                     capabilities=(
-                        "mcu_runtime",
-                        "status_leds",
                         "status_led_red",
                         "status_led_green",
                         "rgb_led",
@@ -129,15 +127,15 @@ class RunnerTests(unittest.TestCase):
             "STM32F405RGT6\n"
             "\n"
             "Test Configuration:\n"
-            "Flight Computer V1 Initial Acceptance\n"
+            "Flight Computer V1 Complete Acceptance\n"
             "\n"
             "UUID:\n"
-            "ccc7d571-141e-4054-8e77-6ac3a97ababa\n"
+            "642e3504-c499-409c-858f-ac6b5e2850cf\n"
             "\n"
             "Configured test order:\n"
             "\n"
-            "1. mcu_runtime\n"
-            "2. status_leds\n"
+            "1. status_led_red\n"
+            "2. status_led_green\n"
             "3. rgb_led\n"
             "4. imu\n"
             "5. barometer\n"
@@ -172,7 +170,7 @@ class RunnerTests(unittest.TestCase):
 
         with redirect_stdout(io.StringIO()), redirect_stderr(stderr):
             exit_code = run(
-                INITIAL_TEST_CONFIG,
+                CURRENT_TEST_CONFIG,
                 port="/dev/cu.explicit",
                 firmware_workflow=workflow,
                 usb_connection_workflow=fail_usb,
@@ -204,7 +202,7 @@ class RunnerTests(unittest.TestCase):
 
         with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
             exit_code = run(
-                INITIAL_TEST_CONFIG,
+                CURRENT_TEST_CONFIG,
                 firmware_workflow=workflow,
                 usb_connection_workflow=usb_connection,
                 start_test_workflow=fail_start,
@@ -234,7 +232,7 @@ class RunnerTests(unittest.TestCase):
 
         with redirect_stdout(io.StringIO()), redirect_stderr(stderr):
             exit_code = run(
-                INITIAL_TEST_CONFIG,
+                CURRENT_TEST_CONFIG,
                 firmware_workflow=workflow,
                 usb_connection_workflow=usb_connection,
                 start_test_workflow=lambda _connection, *, test_uuid: StartTestResponse(
@@ -269,7 +267,7 @@ class RunnerTests(unittest.TestCase):
             raise ProgrammingError("no ST-Link probe detected")
 
         with redirect_stdout(stdout), redirect_stderr(stderr):
-            exit_code = run(INITIAL_TEST_CONFIG, firmware_workflow=fail)
+            exit_code = run(CURRENT_TEST_CONFIG, firmware_workflow=fail)
 
         self.assertEqual(exit_code, 1)
         self.assertIn("Building and flashing firmware", stdout.getvalue())

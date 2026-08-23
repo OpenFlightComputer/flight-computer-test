@@ -13,8 +13,6 @@ from fc_test.tests.rgb_led.colours import ColourError, colour_to_rgb
 
 SUPPORTED_TEST_TYPES = frozenset(
     {
-        "mcu_runtime",
-        "status_leds",
         "status_led_red",
         "status_led_green",
         "rgb_led",

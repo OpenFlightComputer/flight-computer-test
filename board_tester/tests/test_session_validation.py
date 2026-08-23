@@ -13,7 +13,7 @@ from fc_test.session_validation import validate_session
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-INITIAL_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v001.json"
+CURRENT_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v004.json"
 
 
 def response(*, mcu: str = "STM32F405RGT6", capabilities: tuple[str, ...]) -> StartTestResponse:
@@ -33,7 +33,7 @@ def response(*, mcu: str = "STM32F405RGT6", capabilities: tuple[str, ...]) -> St
 
 class SessionValidationTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.configurations = load_configurations(INITIAL_TEST_CONFIG)
+        self.configurations = load_configurations(CURRENT_TEST_CONFIG)
         self.required_capabilities = self.configurations.board.test_capabilities
 
     def test_matching_board_and_firmware_capabilities_pass(self) -> None:
@@ -48,7 +48,7 @@ class SessionValidationTests(unittest.TestCase):
     def test_missing_board_capability_fails_but_extra_firmware_capabilities_are_allowed(self) -> None:
         validation = validate_session(
             self.configurations,
-            response(capabilities=("mcu_runtime", "future_test")),
+            response(capabilities=("status_led_red", "future_test")),
         )
 
         self.assertFalse(validation.passed)
@@ -56,8 +56,7 @@ class SessionValidationTests(unittest.TestCase):
             validation.failures,
             (
                 "firmware is missing board capability/capabilities: "
-                "status_leds, status_led_red, status_led_green, rgb_led, "
-                "imu, barometer, sd_card",
+                "status_led_green, rgb_led, imu, barometer, sd_card",
             ),
         )
 

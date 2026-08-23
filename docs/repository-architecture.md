@@ -27,7 +27,7 @@
 
 Before flashing, the board tester requires every test type in the selected test configuration to appear in the selected board configuration's explicit `test_capabilities`. After flashing and connecting, it sends `START_TEST`. The response establishes STM32 UID, MCU and board identity, manufacturing-firmware identity, and supported capabilities. The runner records the response, then confirms the identity and that firmware capabilities are a superset of the board capabilities before it dispatches any configured component test.
 
-Consequently there is no `identity` test package or capability. The first intended component test is `mcu_runtime`, which evaluates actual clock, timebase, and responsiveness behavior rather than rediscovering session metadata.
+Consequently there is no `identity` or `mcu_runtime` component test. Successfully reaching `START_TEST_RESPONSE` already proves that clock initialization completed, USB is operational, and the main loop is processing commands. The board advertises the two independently executable status LED tests as `status_led_red` and `status_led_green`; there is no aggregate `status_leds` capability.
 
 ## Current implementation boundary
 

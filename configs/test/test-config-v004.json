@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "name": "Flight Computer V1 Complete Acceptance",
+  "uuid": "642e3504-c499-409c-858f-ac6b5e2850cf",
+  "board_config": "../board/flightcomputer-v1.json",
+  "tests": [
+    {"type": "status_led_red", "enabled": true, "parameters": {}},
+    {"type": "status_led_green", "enabled": true, "parameters": {}},
+    {
+      "type": "rgb_led",
+      "enabled": true,
+      "parameters": {"colour": "turquoise"}
+    },
+    {"type": "imu", "enabled": true, "parameters": {}},
+    {"type": "barometer", "enabled": true, "parameters": {}},
+    {"type": "sd_card", "enabled": true, "parameters": {}}
+  ]
+}

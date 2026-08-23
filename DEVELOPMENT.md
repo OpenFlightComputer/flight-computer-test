@@ -10,7 +10,9 @@ Milestone 12 — BMI270 live-motion operator test: **complete and committed as `
 
 Milestone 13 — BMP388 live environmental operator test: **complete and committed as `cddd4e1`**.
 
-Milestone 14 — microSD automatic media test: **implemented in the working tree, pending owner review**.
+Milestone 14 — microSD automatic media test: **complete and committed as `c1df3d1`**.
+
+Milestone 15 — complete one-command V1 acceptance workflow: **in progress**.
 
 ## In progress
 
@@ -202,7 +204,7 @@ Milestone 14 — microSD automatic media test: **implemented in the working tree
 - Standard `argparse` usage errors return exit code 2; successful help and startup return exit code 0.
 - The computer-side software directory is named `board_tester` rather than the ambiguous `host` or `test_station`.
 - `identity` is not a test or firmware capability. Session identity is required initialization data and must be persisted before component dispatch.
-- The first intended component test is `mcu_runtime`; discrete LED tests use the explicit `status_leds` name.
+- Runtime readiness is established by the mandatory `START_TEST` exchange rather than duplicated as an `mcu_runtime` component test. The discrete LEDs are independently advertised and executed as `status_led_red` and `status_led_green`; there is no aggregate `status_leds` capability.
 - Firmware directories use `hardware_abstraction` and `board_support` to distinguish portable access interfaces from routed board definitions.
 - At Milestone 1, modules were responsibility markers only and no placeholder claimed unimplemented behavior. Later milestones replace each marker with tested behavior at its boundary.
 - The current KiCad working tree is hardware truth for this milestone. It contains uncommitted owner changes, so its file hashes are recorded alongside the Git commit rather than pretending the commit alone identifies the reviewed design.

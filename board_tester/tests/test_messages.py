@@ -26,7 +26,7 @@ from fc_test.session_validation import SessionValidation
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-INITIAL_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v001.json"
+CURRENT_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v004.json"
 
 
 def response_line(*, command_id: int = 1) -> bytes:
@@ -174,7 +174,7 @@ class MessageTests(unittest.TestCase):
 
 class ReportingTests(unittest.TestCase):
     def test_initial_report_is_created_only_from_valid_metadata(self) -> None:
-        configurations = load_configurations(INITIAL_TEST_CONFIG)
+        configurations = load_configurations(CURRENT_TEST_CONFIG)
         response = StartTestResponse(
             command_id=1,
             device=DeviceMetadata(
@@ -202,7 +202,7 @@ class ReportingTests(unittest.TestCase):
         self.assertEqual(contents["results"], [])
 
     def test_failed_session_validation_updates_existing_report(self) -> None:
-        configurations = load_configurations(INITIAL_TEST_CONFIG)
+        configurations = load_configurations(CURRENT_TEST_CONFIG)
         response = StartTestResponse(
             command_id=1,
             device=DeviceMetadata(

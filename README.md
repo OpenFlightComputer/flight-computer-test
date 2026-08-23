@@ -43,13 +43,13 @@ Synchronize the uv-managed development environment, then run the standard consol
 ```bash
 uv sync --project board_tester
 uv run --project board_tester fc-test firmware build
-uv run --project board_tester fc-test run --config configs/test/test-config-v003.json
+uv run --project board_tester fc-test run --config configs/test/test-config-v004.json
 ```
 
 Or use the repository-local bootstrap, which delegates to the same uv project and console entry point:
 
 ```bash
-./fc-test run --config configs/test/test-config-v003.json
+./fc-test run --config configs/test/test-config-v004.json
 ```
 
 Build and flash can also be invoked independently:
@@ -60,7 +60,7 @@ Build and flash can also be invoked independently:
 ./fc-test firmware flash
 ./fc-test firmware flash --probe-serial <serial>
 ./fc-test firmware flash --programmer /custom/path/STM32_Programmer_CLI
-./fc-test run --config configs/test/test-config-v001.json --port /dev/cu.usbmodem...
+./fc-test run --config configs/test/test-config-v004.json --port /dev/cu.usbmodem...
 ```
 
 `firmware flash` and `run` build current Release firmware before flashing unless an explicit prebuilt ELF is supplied to `firmware flash`. Both flashing routes accept `--programmer <path>` when STM32CubeProgrammer is installed in a nonstandard location. After reset, `run` waits up to 10 seconds for the development USB identity `CAFE:4001`; use `--port <path>` to select a particular serial port or bypass VID/PID matching. All routes reuse the same Python build and programming services; they do not invoke one another as nested CLI commands.

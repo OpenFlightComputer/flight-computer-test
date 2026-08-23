@@ -15,13 +15,12 @@ from fc_test.configuration import (
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-INITIAL_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v001.json"
-RGB_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v003.json"
+CURRENT_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v004.json"
 
 
 class ConfigurationLoadingTests(unittest.TestCase):
-    def test_initial_configurations_load_with_expected_identity_and_order(self) -> None:
-        configurations = load_configurations(INITIAL_TEST_CONFIG)
+    def test_current_configurations_load_with_expected_identity_and_order(self) -> None:
+        configurations = load_configurations(CURRENT_TEST_CONFIG)
 
         self.assertEqual(configurations.board.name, "Flight Computer V1")
         self.assertEqual(configurations.board.revision, "1.7")
@@ -29,8 +28,6 @@ class ConfigurationLoadingTests(unittest.TestCase):
         self.assertEqual(
             configurations.board.test_capabilities,
             (
-                "mcu_runtime",
-                "status_leds",
                 "status_led_red",
                 "status_led_green",
                 "rgb_led",
@@ -40,16 +37,16 @@ class ConfigurationLoadingTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            configurations.test.name, "Flight Computer V1 Initial Acceptance"
+            configurations.test.name, "Flight Computer V1 Complete Acceptance"
         )
         self.assertEqual(
-            str(configurations.test.uuid), "ccc7d571-141e-4054-8e77-6ac3a97ababa"
+            str(configurations.test.uuid), "642e3504-c499-409c-858f-ac6b5e2850cf"
         )
         self.assertEqual(
             [test.type for test in configurations.test.enabled_tests],
             [
-                "mcu_runtime",
-                "status_leds",
+                "status_led_red",
+                "status_led_green",
                 "rgb_led",
                 "imu",
                 "barometer",
@@ -60,7 +57,7 @@ class ConfigurationLoadingTests(unittest.TestCase):
     def test_board_reference_is_resolved_relative_to_test_config(self) -> None:
         with tempfile.TemporaryDirectory() as other_directory:
             with chdir(other_directory):
-                configuration = load_test_configuration(INITIAL_TEST_CONFIG)
+                configuration = load_test_configuration(CURRENT_TEST_CONFIG)
 
         self.assertEqual(
             configuration.board_config_path,
@@ -68,7 +65,7 @@ class ConfigurationLoadingTests(unittest.TestCase):
         )
 
     def test_rgb_configuration_selects_turquoise(self) -> None:
-        configuration = load_test_configuration(RGB_TEST_CONFIG)
+        configuration = load_test_configuration(CURRENT_TEST_CONFIG)
         rgb_test = next(test for test in configuration.tests if test.type == "rgb_led")
 
         self.assertEqual(rgb_test.parameters, {"colour": "turquoise"})
