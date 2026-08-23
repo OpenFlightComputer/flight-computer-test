@@ -37,6 +37,11 @@ class SdCardTestHandler(ComponentTestHandler):
         self._events = []
         self._card = {}
         self._output("Starting automatic SD-card test.")
+        self._output(
+            "WARNING: This test overwrites and clears eight raw sectors near "
+            "the end of the SD card. Use a disposable card; existing filesystem "
+            "data may be damaged."
+        )
 
     def handle_event(self, event: ComponentTestEvent) -> ComponentTestCompletion | None:
         self._events.append(event.event)

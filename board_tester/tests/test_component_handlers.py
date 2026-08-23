@@ -12,6 +12,7 @@ from fc_test.tests.barometer.handler import BarometerTestHandler
 from fc_test.tests.base import prompt_yes_no
 from fc_test.tests.imu.handler import ImuTestHandler
 from fc_test.tests.registry import create_handler
+from fc_test.tests.sd_card.handler import SdCardTestHandler
 from fc_test.tests.status_leds.handler import StatusLedTestHandler
 from fc_test.test_catalog import SUPPORTED_TEST_TYPES
 
@@ -57,6 +58,16 @@ class ComponentHandlerTests(unittest.TestCase):
 
         self.assertEqual(calls, ["status_led_red"])
         self.assertEqual(result.status, "passed")
+
+    def test_sd_card_warns_before_destructive_test(self) -> None:
+        output: list[str] = []
+        handler = SdCardTestHandler(output=output.append)
+
+        handler.begin(TestDefinition("sd_card", True, {}))
+
+        self.assertEqual(output[0], "Starting automatic SD-card test.")
+        self.assertIn("overwrites and clears eight raw sectors", output[1])
+        self.assertIn("existing filesystem data may be damaged", output[1])
 
     def test_imu_rejects_incomplete_sample_shape(self) -> None:
         handler = ImuTestHandler()
