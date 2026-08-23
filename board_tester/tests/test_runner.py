@@ -20,6 +20,7 @@ from fc_test.protocol.messages import (
 )
 from fc_test.protocol.messages import ProtocolMessageError
 from fc_test.runner import run
+from fc_test.summary import TestOutcome as ComponentOutcome
 from fc_test.tests.base import GenericComponentTestHandler
 
 
@@ -52,6 +53,7 @@ class RunnerTests(unittest.TestCase):
     def test_run_prints_loaded_configuration_summary(self) -> None:
         stdout = io.StringIO()
         workflow_calls: list[tuple[str, str | None, Path | None]] = []
+        summary_calls: list[tuple[tuple[ComponentOutcome, ...], bool]] = []
 
         def workflow(profile, *, probe_serial=None, programmer_path=None):
             workflow_calls.append((profile, probe_serial, programmer_path))
@@ -109,10 +111,29 @@ class RunnerTests(unittest.TestCase):
                 ),
                 component_result_writer=lambda *_arguments, **_keywords: None,
                 component_run_finalizer=lambda *_arguments, **_keywords: None,
+                summary_writer=lambda _definitions, outcomes, *, completed: summary_calls.append(
+                    (outcomes, completed)
+                ),
             )
 
         self.assertEqual(exit_code, 0)
         self.assertEqual(workflow_calls, [("release", None, None)])
+        self.assertEqual(
+            summary_calls,
+            [
+                (
+                    (
+                        ComponentOutcome("status_led_red", "passed"),
+                        ComponentOutcome("status_led_green", "passed"),
+                        ComponentOutcome("rgb_led", "passed"),
+                        ComponentOutcome("imu", "passed"),
+                        ComponentOutcome("barometer", "passed"),
+                        ComponentOutcome("sd_card", "passed"),
+                    ),
+                    True,
+                )
+            ],
+        )
         self.assertEqual(
             stdout.getvalue(),
             "OpenFlightComputer Hardware Test\n"

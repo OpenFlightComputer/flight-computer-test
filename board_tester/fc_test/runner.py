@@ -33,6 +33,7 @@ from fc_test.reporting.json_report import ReportError, create_initial_report
 from fc_test.reporting.json_report import record_session_validation
 from fc_test.reporting.json_report import finalize_component_run, record_component_result
 from fc_test.session_validation import SessionValidation, validate_session
+from fc_test.summary import TestOutcome, print_test_summary
 from fc_test.tests.base import ComponentTestHandler, GenericComponentTestHandler
 from fc_test.tests.registry import create_handler
 
@@ -69,6 +70,10 @@ class ComponentTestWorkflow(Protocol):
     def __call__(self, connection, *, command_id: int, test_type: str, on_event): ...
 
 
+class SummaryWriter(Protocol):
+    def __call__(self, definitions, outcomes, *, completed: bool) -> None: ...
+
+
 def run(
     configuration_path: Path,
     *,
@@ -86,6 +91,7 @@ def run(
     handler_factory: Callable[[], ComponentTestHandler] = GenericComponentTestHandler,
     component_result_writer=record_component_result,
     component_run_finalizer=finalize_component_run,
+    summary_writer: SummaryWriter = print_test_summary,
 ) -> int:
     """Load config, flash the board, and establish its USB CDC transport."""
 
@@ -136,6 +142,11 @@ def run(
     print(f"ST-Link: {outcome.probe.serial_number}")
     print("Programming, verification, and reset completed.")
 
+    outcomes: list[TestOutcome] = []
+    report_path: Path | None = None
+    validation: SessionValidation | None = None
+    component_run_completed = False
+
     print("Waiting for USB CDC device...", flush=True)
     try:
         with usb_connection_workflow(port) as connection:
@@ -160,6 +171,7 @@ def run(
                             workflow=component_test_workflow,
                         )
                     except (ProtocolMessageError, UsbTransportError) as error:
+                        outcomes.append(TestOutcome(definition.type, "failed"))
                         component_result_writer(
                             report_path,
                             test_type=definition.type,
@@ -181,14 +193,22 @@ def run(
                                 "operator cancelled test; stop acknowledgement "
                                 f"not received: {error}"
                             )
+                        outcomes.append(TestOutcome(definition.type, "stopped"))
                         component_result_writer(
                             report_path,
                             test_type=definition.type,
                             status="stopped",
                             details={"failure": failure},
                         )
+                        summary_writer(
+                            configurations.test.enabled_tests,
+                            tuple(outcomes),
+                            completed=False,
+                        )
+                        print(f"Test run created: {report_path}")
                         print("fc-test: test run cancelled by operator", file=sys.stderr)
                         return 130
+                    outcomes.append(TestOutcome(definition.type, result.status))
                     component_result_writer(
                         report_path,
                         test_type=definition.type,
@@ -196,9 +216,24 @@ def run(
                         details=result.details,
                     )
                 component_run_finalizer(report_path)
+                component_run_completed = True
     except (UsbTransportError, ProtocolMessageError, ReportError) as error:
+        if report_path is not None:
+            summary_writer(
+                configurations.test.enabled_tests,
+                tuple(outcomes),
+                completed=False,
+            )
+            print(f"Test run created: {report_path}")
         print(f"fc-test: {error}", file=sys.stderr)
         return 1
+    assert report_path is not None
+    assert validation is not None
+    summary_writer(
+        configurations.test.enabled_tests,
+        tuple(outcomes),
+        completed=component_run_completed,
+    )
     print(f"Test run created: {report_path}")
     if not validation.passed:
         print(
