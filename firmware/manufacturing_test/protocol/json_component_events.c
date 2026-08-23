@@ -30,6 +30,22 @@ static int build_barometer_event(
         (long)event->pressure_centi_pa, (long)event->temperature_centi_c);
 }
 
+static int build_sd_card_event(
+    uint32_t command_id, const char *test_type, const component_test_event_t *event,
+    char *destination, size_t capacity
+)
+{
+    return snprintf(destination, capacity,
+        "{\"protocol_version\":1,\"type\":\"TEST_EVENT\",\"command_id\":%lu,"
+        "\"test_type\":\"%s\",\"event\":\"%s\",\"data\":{"
+        "\"card_type\":\"%s\",\"sector_count\":%llu,\"test_sector\":%lu,"
+        "\"checksum\":%lu}}",
+        (unsigned long)command_id, test_type, event->name,
+        event->high_capacity ? "SDHC/SDXC" : "SDSC",
+        (unsigned long long)event->sector_count, (unsigned long)event->test_sector,
+        (unsigned long)event->checksum);
+}
+
 bool json_protocol_build_test_event(
     uint32_t command_id, const char *test_type, const component_test_event_t *event,
     char *destination, size_t capacity, size_t *length
@@ -44,6 +60,8 @@ bool json_protocol_build_test_event(
         written = build_imu_event(command_id, test_type, event, destination, capacity);
     } else if (event->kind == COMPONENT_TEST_EVENT_BAROMETER_SAMPLE) {
         written = build_barometer_event(command_id, test_type, event, destination, capacity);
+    } else if (event->kind == COMPONENT_TEST_EVENT_SD_CARD_INFO) {
+        written = build_sd_card_event(command_id, test_type, event, destination, capacity);
     } else {
         written = snprintf(destination, capacity,
             "{\"protocol_version\":1,\"type\":\"TEST_EVENT\","

@@ -184,11 +184,12 @@ add_executable(manufacturing_test
     components/component_registry.c
     components/bmi270/bmi270_test.c
     components/bmp388/bmp388_test.c
+    components/sd_card/sd_card_test.c
     components/rgb_led/rgb_led_test.c
     components/rgb_led/ws2812_encoder.c
     components/status_leds/status_led_test.c
     board_support/flightcomputer_v1/stm32f4xx_it.c
-    board_support/flightcomputer_v1/imu_spi.c
+    board_support/flightcomputer_v1/spi_devices.c
     board_support/flightcomputer_v1/barometer_i2c.c
     board_support/flightcomputer_v1/system_clock.c
     board_support/flightcomputer_v1/usb_device_port.c
@@ -200,6 +201,8 @@ add_executable(manufacturing_test
     protocol/usb_descriptors.c
     drivers/bmi270/bmi270_driver.c
     drivers/bmp388/bmp388_driver.c
+    drivers/sd_card/sd_card_driver.c
+    hardware_abstraction/spi_device.c
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/BMI270_SensorAPI/bmi2.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/BMI270_SensorAPI/bmi270.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/BMP3_SensorAPI/bmp3.c"
@@ -210,6 +213,7 @@ target_include_directories(manufacturing_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/application"
     "${CMAKE_CURRENT_SOURCE_DIR}/board_support/flightcomputer_v1"
     "${CMAKE_CURRENT_SOURCE_DIR}/components"
+    "${CMAKE_CURRENT_SOURCE_DIR}/hardware_abstraction"
     "${CMAKE_CURRENT_SOURCE_DIR}/drivers"
     "${CMAKE_CURRENT_SOURCE_DIR}/protocol"
     "${CMAKE_CURRENT_BINARY_DIR}/generated"

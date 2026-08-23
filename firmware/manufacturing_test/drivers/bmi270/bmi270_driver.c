@@ -1,6 +1,6 @@
 #include "bmi270_driver.h"
 
-#include "imu_spi.h"
+#include "spi_devices.h"
 #include "bmi270.h"
 
 #include <string.h>
@@ -20,9 +20,14 @@ static int8_t spi_read(uint8_t register_address, uint8_t *data, uint32_t length,
     }
     /* Bit 7 requests a BMI270 SPI read; following bytes generate dummy clocks. */
     transmit[0] = register_address | BMI2_SPI_RD_MASK;
-    if (!flightcomputer_v1_imu_spi_transfer(transmit, receive, length + 1U)) {
+    spi_device_t *device = flightcomputer_v1_imu_spi_device();
+    if (!spi_device_select(device) || !spi_device_transfer(
+            device, transmit, receive, length + 1U
+        )) {
+        spi_device_deselect(device);
         return BMI2_E_COM_FAIL;
     }
+    spi_device_deselect(device);
     memcpy(data, &receive[1], length);
     return BMI2_OK;
 }
@@ -37,8 +42,12 @@ static int8_t spi_write(uint8_t register_address, const uint8_t *data, uint32_t 
     }
     transmit[0] = register_address & (uint8_t)~BMI2_SPI_RD_MASK;
     memcpy(&transmit[1], data, length);
-    return flightcomputer_v1_imu_spi_transfer(transmit, receive, length + 1U) ?
-        BMI2_OK : BMI2_E_COM_FAIL;
+    spi_device_t *device = flightcomputer_v1_imu_spi_device();
+    const bool success = spi_device_select(device) && spi_device_transfer(
+        device, transmit, receive, length + 1U
+    );
+    spi_device_deselect(device);
+    return success ? BMI2_OK : BMI2_E_COM_FAIL;
 }
 
 static void delay_us(uint32_t period, void *context)

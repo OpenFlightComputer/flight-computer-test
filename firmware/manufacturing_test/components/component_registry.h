@@ -26,6 +26,7 @@ typedef enum {
     COMPONENT_TEST_EVENT_MESSAGE = 0,
     COMPONENT_TEST_EVENT_IMU_SAMPLE = 1,
     COMPONENT_TEST_EVENT_BAROMETER_SAMPLE = 2,
+    COMPONENT_TEST_EVENT_SD_CARD_INFO = 3,
 } component_test_event_kind_t;
 
 typedef struct {
@@ -39,6 +40,10 @@ typedef struct {
     int16_t gyroscope_z;
     int32_t pressure_centi_pa;
     int32_t temperature_centi_c;
+    uint64_t sector_count;
+    uint32_t test_sector;
+    uint32_t checksum;
+    bool high_capacity;
 } component_test_event_t;
 
 typedef struct {

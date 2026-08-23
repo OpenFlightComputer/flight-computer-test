@@ -8,9 +8,25 @@ Milestone 11 — WS2812 configurable-colour operator test: **complete and commit
 
 Milestone 12 — BMI270 live-motion operator test: **complete and committed as `f5fb941`**.
 
-Milestone 13 — BMP388 live environmental operator test: **implemented in the working tree, pending owner review**.
+Milestone 13 — BMP388 live environmental operator test: **complete and committed as `cddd4e1`**.
+
+Milestone 14 — microSD automatic media test: **implemented in the working tree, pending owner review**.
 
 ## In progress
+
+### Milestone 14 — microSD automatic media test
+
+- Replaced the BMI270-only SPI adapter with a reusable SPI-device interface. The board layer now supplies independently configured SPI3/BMI270 and SPI1/microSD devices while component drivers own their device protocol.
+- Added the SPI-mode SD initialization sequence: initial clocks, CMD0 reset, CMD8 version check, CMD55/ACMD41 ready polling, CMD58 OCR/card-class discovery, SDSC block-length setup where necessary, and CSD capacity parsing. It accepts SDSC, SDHC, and SDXC cards and rejects unsupported responses.
+- Added an automatic removable-media workflow. The test begins from a confirmed empty socket; an already inserted card must be removed, then an operator inserts it. The card-detect contact is sampled three times at 20 ms intervals before proceeding.
+- On insertion the firmware writes eight deterministic 512-byte sectors near the card end, reads them back for byte-for-byte comparison plus CRC-32 validation, zero-fills those test sectors, and reports pass/fail itself. The tester only displays progress and stores the final card type, capacity, test location, checksum, and event history.
+- The PC5 card-detect polarity is provisionally treated as active-low from the socket/pull-up topology and must be confirmed with the physical V1 board.
+
+#### Milestone 14 validation
+
+- All 74 board-tester unit tests pass in the uv-managed Python 3.12 environment.
+- Debug and Release firmware images build with strict warnings-as-errors. The Debug image uses 84,304 bytes Flash (8.04%) and 33,328 bytes static RAM (25.43%).
+- Physical card detection, initialization across the accepted SD families, data integrity, and cleanup require a physical board and disposable test card.
 
 ### Milestone 13 — BMP388 live environmental operator test
 

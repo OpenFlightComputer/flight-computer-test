@@ -4,6 +4,7 @@ from fc_test.tests.base import GenericComponentTestHandler
 from fc_test.tests.rgb_led.handler import RgbLedTestHandler
 from fc_test.tests.imu.handler import ImuTestHandler
 from fc_test.tests.barometer.handler import BarometerTestHandler
+from fc_test.tests.sd_card.handler import SdCardTestHandler
 from fc_test.tests.status_leds.handler import StatusLedTestHandler
 
 
@@ -18,4 +19,6 @@ def create_handler(test_type: str):
         return ImuTestHandler()
     if test_type == "barometer":
         return BarometerTestHandler()
+    if test_type == "sd_card":
+        return SdCardTestHandler()
     return GenericComponentTestHandler()

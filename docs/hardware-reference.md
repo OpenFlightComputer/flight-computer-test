@@ -80,7 +80,7 @@ Signal names such as `GPS_RX` and `RP1_RX` appear to be named from the external 
 
 - The BMP388 is wired for I2C: CSB is tied to +3.3 V and SDO is tied to GND. Its interrupt pin is unconnected.
 - The BMI270 is routed as a four-wire SPI device. The manufacturing firmware selects SPI3 alternate function 6 on PB3/PB4/PB5, leaving SPI1's PA5/PA6/PA7 route for the microSD card.
-- The microSD socket is routed in SPI mode through SPI1 pins and includes a dedicated card-detect signal.
+- The microSD socket is routed in SPI mode through SPI1 pins and includes a dedicated card-detect signal. The manufacturing test initially clocks SPI1 at 328.125 kHz for card initialization, then uses 21 MHz for data transfer; PC5 is provisionally read active-low and must be confirmed on the physical board.
 - USB-C D+/D− route to the STM32 OTG FS pins. CC1 and CC2 each have pull-down resistors. VBUS reaches PA9 through a divider/sense path rather than a direct net label.
 - The SWD header exposes the complete V1 programming set required by the board-tester workflow.
 - The red and green discrete LEDs require hardware review before Milestone 11. Both the schematic netlist and PCB connect D4/D5 pad 2 (`A`) to GND and pad 1 (`K`) toward the MCU through a resistor. That appears reversed for the standard KiCad LED symbol and cannot be solved merely by choosing active-high versus active-low firmware.
