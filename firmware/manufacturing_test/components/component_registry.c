@@ -17,6 +17,10 @@ extern void bmi270_test_start(const component_test_parameters_t *parameters);
 extern component_test_process_result_t bmi270_test_process(void);
 extern const component_test_event_t *bmi270_test_event(void);
 extern void bmi270_test_stop(void);
+extern void bmp388_test_start(const component_test_parameters_t *parameters);
+extern component_test_process_result_t bmp388_test_process(void);
+extern const component_test_event_t *bmp388_test_event(void);
+extern void bmp388_test_stop(void);
 static const component_test_definition_t production_tests[] = {
     { .type = "status_led_red", .start = status_led_red_start,
       .process = status_led_process, .event = NULL, .stop = status_led_stop },
@@ -28,6 +32,9 @@ static const component_test_definition_t production_tests[] = {
     { .type = "imu", .start = bmi270_test_start,
       .process = bmi270_test_process, .event = bmi270_test_event,
       .stop = bmi270_test_stop },
+    { .type = "barometer", .start = bmp388_test_start,
+      .process = bmp388_test_process, .event = bmp388_test_event,
+      .stop = bmp388_test_stop },
 };
 static const component_test_registry_t production_registry = {
     .definitions = production_tests,

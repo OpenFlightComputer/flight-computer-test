@@ -6,9 +6,24 @@ Milestone 10 — discrete status LED tests: **complete and committed**.
 
 Milestone 11 — WS2812 configurable-colour operator test: **complete and committed as `e2565f3`**.
 
-Milestone 12 — BMI270 live-motion operator test: **implemented in the working tree, pending owner review**.
+Milestone 12 — BMI270 live-motion operator test: **complete and committed as `f5fb941`**.
+
+Milestone 13 — BMP388 live environmental operator test: **implemented in the working tree, pending owner review**.
 
 ## In progress
+
+### Milestone 13 — BMP388 live environmental operator test
+
+- Added I2C2 board support on the resolved PB10/PB11 alternate-function-4 route. It uses the BMP388's fixed `0x76` address selected by the hardware SDO-to-ground strap.
+- Pinned Bosch's BSD-3-Clause BMP3 SensorAPI `v2.0.6` as a submodule and enabled its integer compensation path, keeping pressure and temperature as exact centi-Pascal and centi-degree-Celsius values in firmware.
+- Added one-time identity/calibration/configuration initialization, then normal-mode pressure and temperature sampling at 25 Hz with tester events at 5 Hz. Test cleanup returns the device to sleep mode.
+- Added structured `barometer_sample` events, preserving compensated fixed-point values in the protocol and displaying human-readable pressure/temperature plus deltas in the tester.
+- Added the qualitative operator workflow: lift/lower the board, warm the sensor area gently, then accept with Enter or reject with `n`.
+
+#### Milestone 13 validation
+
+- Board-tester protocol tests cover structured compensated barometer values.
+- Debug and Release firmware images build with strict warnings-as-errors. Actual I2C communication, pressure/temperature response, and operator interaction require the physical board.
 
 ### Milestone 12 — BMI270 live-motion operator test
 

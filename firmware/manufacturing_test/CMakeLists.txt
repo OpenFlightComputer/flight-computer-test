@@ -64,6 +64,8 @@ set(STM32_REQUIRED_FILES
     "${STM32_DEVICE_ROOT}/Source/Templates/gcc/startup_stm32f405xx.s"
     "${STM32_USB_DEVICE_ROOT}/Core/Inc/usbd_core.h"
     "${STM32_USB_DEVICE_ROOT}/Class/CDC/Inc/usbd_cdc.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/BMI270_SensorAPI/bmi270.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/BMP3_SensorAPI/bmp3.c"
 )
 
 foreach(required_file IN LISTS STM32_REQUIRED_FILES)
@@ -140,6 +142,7 @@ add_library(stm32cube_f4 STATIC
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_flash.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_flash_ex.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_gpio.c"
+    "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_i2c.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_pcd.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_pcd_ex.c"
     "${STM32_HAL_ROOT}/Src/stm32f4xx_hal_pwr.c"
@@ -180,20 +183,26 @@ add_executable(manufacturing_test
     application/session_protocol.c
     components/component_registry.c
     components/bmi270/bmi270_test.c
+    components/bmp388/bmp388_test.c
     components/rgb_led/rgb_led_test.c
     components/rgb_led/ws2812_encoder.c
     components/status_leds/status_led_test.c
     board_support/flightcomputer_v1/stm32f4xx_it.c
     board_support/flightcomputer_v1/imu_spi.c
+    board_support/flightcomputer_v1/barometer_i2c.c
     board_support/flightcomputer_v1/system_clock.c
     board_support/flightcomputer_v1/usb_device_port.c
     protocol/newline_framer.c
     protocol/json_protocol.c
+    protocol/json_response_builder.c
+    protocol/json_component_events.c
     protocol/usb_cdc_transport.c
     protocol/usb_descriptors.c
     drivers/bmi270/bmi270_driver.c
+    drivers/bmp388/bmp388_driver.c
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/BMI270_SensorAPI/bmi2.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/BMI270_SensorAPI/bmi270.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/BMP3_SensorAPI/bmp3.c"
     "${STM32_DEVICE_ROOT}/Source/Templates/gcc/startup_stm32f405xx.s"
 )
 
@@ -205,6 +214,7 @@ target_include_directories(manufacturing_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/protocol"
     "${CMAKE_CURRENT_BINARY_DIR}/generated"
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/BMI270_SensorAPI"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/BMP3_SensorAPI"
 )
 
 target_link_libraries(manufacturing_test PRIVATE stm32cube_f4)
@@ -215,6 +225,9 @@ target_compile_options(manufacturing_test PRIVATE
     $<$<COMPILE_LANGUAGE:C>:-Wpedantic>
     $<$<COMPILE_LANGUAGE:C>:-Werror>
 )
+
+# Bosch's integer compensation avoids double-precision code on the MCU.
+target_compile_definitions(manufacturing_test PRIVATE BMP3_64BIT_COMPENSATION)
 
 set(LINKER_SCRIPT
     "${CMAKE_CURRENT_SOURCE_DIR}/board_support/flightcomputer_v1/STM32F405RGTX_FLASH.ld"

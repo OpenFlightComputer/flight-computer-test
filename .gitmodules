@@ -4,3 +4,6 @@
 [submodule "firmware/manufacturing_test/third_party/BMI270_SensorAPI"]
 	path = firmware/manufacturing_test/third_party/BMI270_SensorAPI
 	url = https://github.com/boschsensortec/BMI270_SensorAPI.git
+[submodule "firmware/manufacturing_test/third_party/BMP3_SensorAPI"]
+	path = firmware/manufacturing_test/third_party/BMP3_SensorAPI
+	url = https://github.com/boschsensortec/BMP3_SensorAPI.git

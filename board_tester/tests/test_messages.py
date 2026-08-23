@@ -85,6 +85,19 @@ class MessageTests(unittest.TestCase):
         self.assertEqual(event.data["acceleration_raw"]["y"], -34)
         self.assertEqual(event.data["gyroscope_raw"]["x"], -78)
 
+    def test_barometer_event_preserves_compensated_values(self) -> None:
+        event = decode_component_test_message(
+            b'{"protocol_version":1,"type":"TEST_EVENT","command_id":2,'
+            b'"test_type":"barometer","event":"barometer_sample","data":{'
+            b'"pressure_centi_pa":10124318,"temperature_centi_c":2361}}',
+            expected_command_id=2,
+            expected_test_type="barometer",
+        )
+
+        self.assertIsInstance(event, ComponentTestEvent)
+        self.assertEqual(event.data["pressure_centi_pa"], 10124318)
+        self.assertEqual(event.data["temperature_centi_c"], 2361)
+
     def test_rgb_parameters_are_encoded_as_raw_bytes(self) -> None:
         encoded = encode_run_component_test(
             command_id=2,
