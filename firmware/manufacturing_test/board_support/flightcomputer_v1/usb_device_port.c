@@ -146,7 +146,14 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *device)
     openflightcomputer_usb_pcd.Init.phy_itface = PCD_PHY_EMBEDDED;
     openflightcomputer_usb_pcd.Init.Sof_enable = 0U;
     openflightcomputer_usb_pcd.Init.speed = PCD_SPEED_FULL;
-    openflightcomputer_usb_pcd.Init.vbus_sensing_enable = 1U;
+    /*
+     * Board revision 0.1 divides USB VBUS through two 100 kOhm resistors.
+     * The STM32F405 VBUS sensing input loads that divider below its valid
+     * threshold, so manufacturing firmware must assume VBUS is present.
+     * Future board revisions should connect USB VBUS directly to PA9 and
+     * re-enable hardware VBUS sensing here.
+     */
+    openflightcomputer_usb_pcd.Init.vbus_sensing_enable = 0U;
 
     openflightcomputer_usb_pcd.pData = device;
     device->pData = &openflightcomputer_usb_pcd;
