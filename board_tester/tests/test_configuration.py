@@ -15,7 +15,7 @@ from fc_test.configuration import (
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-CURRENT_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v004.json"
+CURRENT_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v006.json"
 
 
 class ConfigurationLoadingTests(unittest.TestCase):
@@ -37,16 +37,15 @@ class ConfigurationLoadingTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            configurations.test.name, "Flight Computer V1 Complete Acceptance"
+            configurations.test.name,
+            "Flight Computer V1 Accepted Hardware",
         )
         self.assertEqual(
-            str(configurations.test.uuid), "642e3504-c499-409c-858f-ac6b5e2850cf"
+            str(configurations.test.uuid), "9c7d5a34-1e2b-4f68-9a70-2bc1d3e4f506"
         )
         self.assertEqual(
-            [test.type for test in configurations.test.enabled_tests],
+            [test.type for test in configurations.test.tests],
             [
-                "status_led_red",
-                "status_led_green",
                 "rgb_led",
                 "imu",
                 "barometer",

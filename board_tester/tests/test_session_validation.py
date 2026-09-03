@@ -13,7 +13,7 @@ from fc_test.session_validation import validate_session
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-CURRENT_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v004.json"
+CURRENT_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v006.json"
 
 
 def response(*, mcu: str = "STM32F405RGT6", capabilities: tuple[str, ...]) -> StartTestResponse:

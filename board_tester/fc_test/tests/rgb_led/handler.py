@@ -12,6 +12,7 @@ class RgbLedTestHandler(ComponentTestHandler):
         self._output = output
         self._colour = "turquoise"
         self._rgb = colour_to_rgb(self._colour)
+        self._confirm = None
 
     def run(self, connection, *, command_id: int, definition, workflow) -> ComponentTestResult:
         self.begin(definition)
@@ -31,14 +32,17 @@ class RgbLedTestHandler(ComponentTestHandler):
             return ComponentTestCompletion(command_id, definition.type, status)
 
         red, green, blue = self._rgb
-        completion = workflow(
-            connection,
-            command_id=command_id,
-            test_type=definition.type,
-            parameters={"red": red, "green": green, "blue": blue},
-            on_event=self.handle_event,
-            on_started=confirm,
-        )
+        self._confirm = confirm
+        try:
+            completion = workflow(
+                connection,
+                command_id=command_id,
+                test_type=definition.type,
+                parameters={"red": red, "green": green, "blue": blue},
+                on_event=self.handle_event,
+            )
+        finally:
+            self._confirm = None
         return self.finish(completion)
 
     def begin(self, definition) -> None:
@@ -46,8 +50,13 @@ class RgbLedTestHandler(ComponentTestHandler):
         self._colour = colour
         self._rgb = colour_to_rgb(colour)
 
-    def handle_event(self, event: ComponentTestEvent) -> None:
+    def handle_event(
+        self, event: ComponentTestEvent
+    ) -> ComponentTestCompletion | None:
+        if event.event == "rgb_colour_active" and self._confirm is not None:
+            return self._confirm()
         self._output(f"RGB LED: {event.event}")
+        return None
 
     def finish(self, completion: ComponentTestCompletion) -> ComponentTestResult:
         red, green, blue = self._rgb

@@ -20,8 +20,11 @@ def decode_object(line: bytes) -> dict[str, Any]:
     except UnicodeDecodeError as error:
         raise ProtocolMessageError("response is not valid UTF-8") from error
     except json.JSONDecodeError as error:
+        excerpt = repr(line[:120])
+        if len(line) > 120:
+            excerpt += "..."
         raise ProtocolMessageError(
-            f"response is not valid JSON: {error.msg}"
+            f"response is not valid JSON: {error.msg}; received {excerpt}"
         ) from error
 
 

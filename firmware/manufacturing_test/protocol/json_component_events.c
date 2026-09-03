@@ -2,6 +2,24 @@
 
 #include <stdio.h>
 
+#define UINT64_DECIMAL_CAPACITY 21U
+
+static void format_uint64(uint64_t value, char destination[UINT64_DECIMAL_CAPACITY])
+{
+    char reversed[UINT64_DECIMAL_CAPACITY - 1U];
+    size_t digits = 0U;
+
+    do {
+        reversed[digits++] = (char)('0' + value % 10U);
+        value /= 10U;
+    } while (value > 0U);
+
+    for (size_t index = 0U; index < digits; index++) {
+        destination[index] = reversed[digits - index - 1U];
+    }
+    destination[digits] = '\0';
+}
+
 static int build_imu_event(
     uint32_t command_id, const char *test_type, const component_test_event_t *event,
     char *destination, size_t capacity
@@ -35,15 +53,32 @@ static int build_sd_card_event(
     char *destination, size_t capacity
 )
 {
+    char sector_count[UINT64_DECIMAL_CAPACITY];
+
+    /* newlib-nano does not reliably provide long-long printf conversion. */
+    format_uint64(event->sector_count, sector_count);
     return snprintf(destination, capacity,
         "{\"protocol_version\":1,\"type\":\"TEST_EVENT\",\"command_id\":%lu,"
         "\"test_type\":\"%s\",\"event\":\"%s\",\"data\":{"
-        "\"card_type\":\"%s\",\"sector_count\":%llu,\"test_sector\":%lu,"
+        "\"card_type\":\"%s\",\"sector_count\":%s,\"test_sector\":%lu,"
         "\"checksum\":%lu}}",
         (unsigned long)command_id, test_type, event->name,
         event->high_capacity ? "SDHC/SDXC" : "SDSC",
-        (unsigned long long)event->sector_count, (unsigned long)event->test_sector,
+        sector_count, (unsigned long)event->test_sector,
         (unsigned long)event->checksum);
+}
+
+static int build_failure_event(
+    uint32_t command_id, const char *test_type, const component_test_event_t *event,
+    char *destination, size_t capacity
+)
+{
+    return snprintf(destination, capacity,
+        "{\"protocol_version\":1,\"type\":\"TEST_EVENT\",\"command_id\":%lu,"
+        "\"test_type\":\"%s\",\"event\":\"%s\",\"data\":{"
+        "\"stage\":\"%s\",\"reason\":\"%s\",\"code\":%ld}}",
+        (unsigned long)command_id, test_type, event->name,
+        event->failure_stage, event->failure_reason, (long)event->failure_code);
 }
 
 bool json_protocol_build_test_event(
@@ -62,6 +97,13 @@ bool json_protocol_build_test_event(
         written = build_barometer_event(command_id, test_type, event, destination, capacity);
     } else if (event->kind == COMPONENT_TEST_EVENT_SD_CARD_INFO) {
         written = build_sd_card_event(command_id, test_type, event, destination, capacity);
+    } else if (event->kind == COMPONENT_TEST_EVENT_FAILURE) {
+        if (event->failure_stage == NULL || event->failure_reason == NULL) {
+            return false;
+        }
+        written = build_failure_event(
+            command_id, test_type, event, destination, capacity
+        );
     } else {
         written = snprintf(destination, capacity,
             "{\"protocol_version\":1,\"type\":\"TEST_EVENT\","

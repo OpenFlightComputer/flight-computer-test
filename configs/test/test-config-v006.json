@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "name": "Flight Computer V1 Accepted Hardware",
+  "uuid": "9c7d5a34-1e2b-4f68-9a70-2bc1d3e4f506",
+  "board_config": "../board/flightcomputer-v1.json",
+  "tests": [
+    {
+      "type": "rgb_led",
+      "enabled": true,
+      "parameters": {"colour": "turquoise"}
+    },
+    {"type": "imu", "enabled": true, "parameters": {}},
+    {"type": "barometer", "enabled": true, "parameters": {}},
+    {"type": "sd_card", "enabled": true, "parameters": {}}
+  ]
+}

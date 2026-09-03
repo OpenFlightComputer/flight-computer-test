@@ -14,27 +14,35 @@ Milestone 14 — microSD automatic media test: **complete and committed as `c1df
 
 Milestone 15 — complete one-command V1 acceptance workflow: **complete and committed**.
 
-## Current review
+## Current hardware acceptance
 
-A full hardware-independent code review is in progress. It covers correctness,
-readability, duplication, file responsibilities, tests, and documentation. The
-review changes remain uncommitted for owner review.
+Physical V1 acceptance is complete for the working tests enabled by configuration v005.
+The first assembled board completed a full passing run covering SWD programming,
+firmware verification, reset, clock start, USB enumeration and protocol, RGB
+output, BMI270 sampling, BMP388 sampling, and microSD detection/write/read/cleanup.
+USB uses the committed software workaround for the revision-0.1 PA9 VBUS divider.
+D4 and D5 remain disabled because their assembled polarity is reversed.
 
-- Consolidated duplicated IMU/barometer live-operator lifecycle handling and
-  duplicated LED Y/n prompts into shared, testable helpers.
-- Centralized supported test metadata, made handler registration explicit, and
-  added strict component-event/status validation so malformed firmware data
-  becomes an actionable protocol failure rather than a Python traceback.
-- Split the Python protocol message implementation into session, component,
-  and shared-validation modules while retaining the existing public imports.
-- Hardened atomic report updates against stale temporary files and protected
-  reserved traceability fields from component detail collisions.
-- Tightened SD-card CMD8, CMD55/ACMD41, OCR, and CSD validation. Extracted the
-  pure CSD decoder into a small independently tested module.
-- Repaired native firmware tests that had drifted behind the structured event
-  and split JSON serializer interfaces.
-- Current hardware-independent validation: 85 Python tests, five native C test
-  executables, and strict Debug and Release firmware builds all pass.
+The current uncommitted bring-up fixes:
+
+- adds immutable test configuration v005, which recorded the successful
+  bring-up with D4/D5 disabled, and v006, which removes those broken tests from
+  the current V1 procedure;
+- labels BMI270 acceleration and gyroscope data in physical units and gives
+  each sensor a useful independent display scale;
+- reports the exact BMP388 I2C/Bosch-driver stage and error code before failure;
+- waits two seconds for stable BMP388 conversions before choosing the operator
+  baseline, and shows small height-related pressure changes in pascals;
+- reports the exact microSD initialization or media-operation stage, including
+  observed R1/data-token values where relevant;
+- use the physically verified cycle-counted GPIO implementation as the standard
+  single-LED WS2812 driver; and
+- preserves the received raw-line excerpt when tester JSON decoding fails.
+
+Current validation: 90 Python tests, five native C tests, strict Debug and
+Release firmware builds, and one full physical v005 acceptance run pass. The
+changes remain uncommitted for owner review. See `docs/findings-v1-board.md` and
+`docs/findings-v1-tester.md` for the permanent bring-up record.
 
 ## Recent milestone details
 
@@ -270,16 +278,24 @@ review changes remain uncommitted for owner review.
 ## Open issues and assumptions
 
 - `0xCAFE:0x4001` is only a configurable local-development USB identity and may collide with other devices. OpenFlightComputer needs an authorized VID/PID before distributing USB-enabled hardware.
-- USB enumeration, VBUS sensing through the board divider, endpoint transfer, disconnect/reconnect behavior, and host compatibility cannot be accepted until hardware is available.
-- STM32CubeProgrammer is not installed on this Mac, and no ST-Link or Flight Computer board is available. Discovery, real programming, verification, and reset therefore remain hardware/tool acceptance items despite full mocked boundary coverage.
+- USB enumeration, endpoint transfer, and host communication passed on the first
+  board with VBUS sensing disabled. Disconnect/reconnect behavior and broader
+  host compatibility have not been characterized.
+- STM32CubeProgrammer and ST-Link are working with the physical Flight Computer; programming, verification, reset, and USB session setup have passed initial bring-up.
 - Homebrew Python was upgraded from 3.14.6 to 3.14.7, but `pyexpat`, `venv`, and pip bootstrapping still fail on macOS 26.2 because the bottle expects an Expat symbol absent from that OS release. This is a known Homebrew/macOS issue; macOS 26.3 or later is the supported system-level fix. The uv-managed project environment is unaffected.
-- Hardware is not currently available. HSE startup, 168 MHz operation, application-loop execution, and SWD flashing remain on-board validation items rather than claimed results.
+- HSE startup, the application loop, SWD flashing, USB enumeration, and BMI270 communication have passed initial on-board bring-up; long-duration and repeat-unit validation remain outstanding.
 - Confirm whether PC10/PC11 (`RP1_RX`/`RP1_TX`) are intended to use UART4 or USART3 and document signal naming from both MCU and external-device perspectives.
 - Confirm the intended timer/output mode for PC6–PC9 ESC signals when motor-interface testing enters scope; it is explicitly outside V1.
-- Confirm the discrete LED polarity on hardware. Both the exported schematic netlist and PCB connect D4/D5 pin 2 (`A`) to GND and pin 1 (`K`) toward the MCU through a resistor, which appears reversed for the standard KiCad LED symbol.
-- Validate WS2812 input-high margin on hardware. LED1 is powered from +5 V while its data input is driven directly from a 3.3 V MCU through R24, with no level shifter shown.
+- D4/D5 are confirmed reversed on revision 0.1 and cannot illuminate as assembled. Test configuration v005 disables them; rotate the prototype LEDs or correct their polarity in the next hardware revision before re-enabling the tests.
+- The 3.3 V PA1 signal successfully drives the 5 V WS2812 on the first board,
+  but V2 should add a level shifter for production input-high margin.
 - Investigate the KiCad CLI DRC crash and obtain a complete DRC report before treating the current PCB as manufacturing-verified.
 
-## Next milestone
+## Handoff
 
-Complete this review, then perform the remaining hardware-independent hardening and documentation work. Once the board arrives, the priority becomes physical acceptance: SWD programming and reset, clock and USB validation, routed LED behavior, WS2812 signal margin, BMI270 SPI, BMP388 I2C, and microSD detection and destructive media verification.
+The V1 tester is functionally complete. Configuration v006 removes the known-
+broken D4/D5 tests and otherwise matches the four-test procedure that physically
+passed under v005. After owner review, commit the bring-up fixes, rebuild from
+the clean commit, and capture one clean v006 acceptance report. Further tester
+work is deferred to `ROADMAP.md`; development can then concentrate on the
+operational flight firmware.

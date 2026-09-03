@@ -12,6 +12,8 @@ from fc_test.protocol.messages import (
 )
 from fc_test.tests.base import (
     ComponentTestResult,
+    format_component_failure,
+    require_failure_details,
     require_event_integer,
 )
 from fc_test.tests.live_operator import LiveOperatorTestHandler
@@ -20,13 +22,15 @@ from fc_test.tests.live_operator import LiveOperatorTestHandler
 class BarometerTestHandler(LiveOperatorTestHandler):
     """Show compensated BMP388 readings until the operator confirms them."""
 
-    def __init__(self, *, input_reader=input) -> None:
+    def __init__(self, *, input_reader=input, output=print) -> None:
         super().__init__(input_reader=input_reader)
+        self._output = output
         self._pressure_centi_pa: int | None = None
         self._temperature_centi_c: int | None = None
         self._initial_pressure_centi_pa: int | None = None
         self._initial_temperature_centi_c: int | None = None
         self._samples = 0
+        self._failure: dict[str, object] | None = None
 
     @property
     def ready_event(self) -> str:
@@ -45,8 +49,18 @@ class BarometerTestHandler(LiveOperatorTestHandler):
         self._initial_pressure_centi_pa = None
         self._initial_temperature_centi_c = None
         self._samples = 0
+        self._failure = None
 
     def record_event(self, event: ComponentTestEvent) -> None:
+        if event.event == "barometer_stabilizing":
+            self._output(
+                "Barometer initialized; waiting 2 seconds for stable conversions."
+            )
+            return
+        if event.event == "component_failure":
+            self._failure = require_failure_details(event)
+            self._output(format_component_failure("Barometer", self._failure))
+            return
         if event.event != "barometer_sample":
             return
         if event.data is None:
@@ -68,8 +82,15 @@ class BarometerTestHandler(LiveOperatorTestHandler):
             details={
                 "firmware_status": completion.status,
                 "sample_count": self._samples,
+                "initial_pressure_pa": self._as_decimal(
+                    self._initial_pressure_centi_pa
+                ),
+                "initial_temperature_c": self._as_decimal(
+                    self._initial_temperature_centi_c
+                ),
                 "last_pressure_pa": self._as_decimal(self._pressure_centi_pa),
                 "last_temperature_c": self._as_decimal(self._temperature_centi_c),
+                "failure": self._failure,
             },
         )
 
@@ -77,10 +98,10 @@ class BarometerTestHandler(LiveOperatorTestHandler):
         table = Table(title="BMP388 live values")
         table.add_column("Measurement")
         table.add_column("Current", justify="right")
-        table.add_column("Change since start", justify="right")
+        table.add_column("Change from stable baseline", justify="right")
         table.add_row(
             "Pressure", self._formatted(self._pressure_centi_pa, "hPa"),
-            self._delta(self._pressure_centi_pa, self._initial_pressure_centi_pa, "hPa"),
+            self._delta(self._pressure_centi_pa, self._initial_pressure_centi_pa, "Pa"),
         )
         table.add_row(
             "Temperature", self._formatted(self._temperature_centi_c, "°C"),
@@ -88,7 +109,8 @@ class BarometerTestHandler(LiveOperatorTestHandler):
         )
         return Group(
             table,
-            "Lift/lower the board and warm the sensor area; press Enter to pass, "
+            "A 20 cm height change is only about 2–3 Pa. Lift/lower the board "
+            "and warm the sensor area; press Enter to pass, "
             "or n then Enter to fail.",
         )
 

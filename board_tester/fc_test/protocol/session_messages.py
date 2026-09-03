@@ -10,6 +10,7 @@ from uuid import UUID
 from fc_test.protocol.message_validation import (
     PROTOCOL_VERSION,
     ProtocolMessageError,
+    decode_object,
     require_keys,
     require_object,
     require_positive_integer,
@@ -64,16 +65,7 @@ def decode_start_test_response(
 ) -> StartTestResponse:
     """Decode and strictly validate one successful START_TEST response."""
 
-    try:
-        value = json.loads(line.decode("utf-8"))
-    except UnicodeDecodeError as error:
-        raise ProtocolMessageError("response is not valid UTF-8") from error
-    except json.JSONDecodeError as error:
-        raise ProtocolMessageError(
-            f"response is not valid JSON: {error.msg}"
-        ) from error
-
-    response = require_object(value, "response")
+    response = decode_object(line)
     if response.get("protocol_version") != PROTOCOL_VERSION:
         raise ProtocolMessageError("response has an unsupported protocol_version")
     if response.get("type") == "ERROR":

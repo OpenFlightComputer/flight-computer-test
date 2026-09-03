@@ -125,8 +125,7 @@
       "net": "WS2812_DI",
       "direction": "output",
       "role": "rgb_led_data",
-      "mode": "TIM2_CH2_AF1",
-      "dma": "DMA1_Stream6_Channel3"
+      "mode": "GPIO_OUTPUT_PP_CYCLE_TIMED"
     },
     "PA2": {
       "net": "GPS_RX",
@@ -340,8 +339,9 @@
     }
   },
   "known_hardware_constraints": [
-    "D4 and D5 schematic and PCB polarity appears reversed for the standard KiCad LED symbol and requires hardware confirmation before status LED testing.",
-    "LED1 is powered from +5V and receives 3.3V data without a level shifter; validate the input-high margin during bring-up.",
-    "The BMI270 SPI peripheral selection is not determined by routing and must be chosen consistently in firmware."
+    "D4 and D5 are confirmed reversed on assembled revision 0.1 hardware; configuration v005 disabled them and the current v006 procedure omits them.",
+    "The PA9 USB VBUS input is loaded to about 1 V through the revision-0.1 100 kOhm divider; V1 firmware disables VBUS sensing.",
+    "LED1 is powered from +5V and receives 3.3V data without a level shifter; this worked on the first assembled board but should gain a level shifter in V2.",
+    "The BMI270 uses SPI3 alternate function 6 on PB3/PB4/PB5 and was verified on assembled hardware."
   ]
 }

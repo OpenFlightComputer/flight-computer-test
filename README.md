@@ -30,11 +30,11 @@ Board configuration describes physical hardware and explicitly declares its supp
 
 ## Current state
 
-The complete hardware-independent V1 workflow is implemented. `run` validates the selected board and test policy, builds and flashes manufacturing firmware, establishes a USB session, validates firmware identity and capabilities, executes the six configured component tests in order, persists incremental results, and prints a coloured final summary. The implemented component tests cover both status LEDs, the WS2812 RGB LED, BMI270 motion data, BMP388 pressure and temperature data, and automatic microSD detection/write/read/checksum/cleanup.
+The complete V1 workflow is implemented and physically exercised. `run` validates the selected board and test policy, builds and flashes manufacturing firmware, establishes a USB session, validates firmware identity and capabilities, executes each enabled component test in order, persists incremental results, and prints a coloured final summary. The current v006 procedure contains only the physically accepted WS2812 RGB LED, BMI270, BMP388, and microSD tests. The physically reversed D4/D5 on board revision 0.1 are documented findings rather than current test entries.
 
-Python tests, native firmware tests, and Debug and Release cross-builds run without hardware. Physical SWD flashing, USB behavior, routed peripheral communication, LED polarity and signal levels, sensor readings, and SD-card operation remain hardware-acceptance items because the board is not yet available.
+The first assembled board has completed a full passing v005 run. SWD programming and verification, the 168 MHz clock, USB CDC, RGB output, motion and environmental sampling, SD-card detection, and destructive SD write/read/cleanup have all worked on hardware. V1 uses a documented software workaround for its USB VBUS divider. See the [sanitized successful result](docs/example-results/flightcomputer-v1-successful-run.json), [V1 board findings](docs/findings-v1-board.md), and [V1 tester findings](docs/findings-v1-tester.md).
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) for the handoff state, [ROADMAP.md](ROADMAP.md) for planned milestones, [docs/repository-architecture.md](docs/repository-architecture.md) for responsibility boundaries, and [docs/hardware-reference.md](docs/hardware-reference.md) for the reviewed hardware interface.
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the handoff state, [ROADMAP.md](ROADMAP.md) for planned improvements, [docs/repository-architecture.md](docs/repository-architecture.md) for responsibility boundaries, and [docs/hardware-reference.md](docs/hardware-reference.md) for the reviewed hardware interface.
 
 ## Usage
 
@@ -45,13 +45,13 @@ Synchronize the uv-managed development environment, then run the standard consol
 ```bash
 uv sync --project board_tester
 uv run --project board_tester fc-test firmware build
-uv run --project board_tester fc-test run --config configs/test/test-config-v004.json
+uv run --project board_tester fc-test run --config configs/test/test-config-v006.json
 ```
 
 Or use the repository-local bootstrap, which delegates to the same uv project and console entry point:
 
 ```bash
-./fc-test run --config configs/test/test-config-v004.json
+./fc-test run --config configs/test/test-config-v006.json
 ```
 
 Build and flash can also be invoked independently:
@@ -62,7 +62,7 @@ Build and flash can also be invoked independently:
 ./fc-test firmware flash
 ./fc-test firmware flash --probe-serial <serial>
 ./fc-test firmware flash --programmer /custom/path/STM32_Programmer_CLI
-./fc-test run --config configs/test/test-config-v004.json --port /dev/cu.usbmodem...
+./fc-test run --config configs/test/test-config-v006.json --port /dev/cu.usbmodem...
 ```
 
 `firmware flash` and `run` build current Release firmware before flashing unless an explicit prebuilt ELF is supplied to `firmware flash`. Both flashing routes accept `--programmer <path>` when STM32CubeProgrammer is installed in a nonstandard location. After reset, `run` waits up to 10 seconds for the development USB identity `CAFE:4001`; use `--port <path>` to select a particular serial port or bypass VID/PID matching. All routes reuse the same Python build and programming services; they do not invoke one another as nested CLI commands.

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "name": "Flight Computer V1 Acceptance Without Status LEDs",
+  "uuid": "445fe100-ac90-474f-88ff-e0765b941b1f",
+  "board_config": "../board/flightcomputer-v1.json",
+  "tests": [
+    {"type": "status_led_red", "enabled": false, "parameters": {}},
+    {"type": "status_led_green", "enabled": false, "parameters": {}},
+    {
+      "type": "rgb_led",
+      "enabled": true,
+      "parameters": {"colour": "turquoise"}
+    },
+    {"type": "imu", "enabled": true, "parameters": {}},
+    {"type": "barometer", "enabled": true, "parameters": {}},
+    {"type": "sd_card", "enabled": true, "parameters": {}}
+  ]
+}

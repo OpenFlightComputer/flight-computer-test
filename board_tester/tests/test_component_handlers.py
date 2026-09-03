@@ -97,6 +97,44 @@ class ComponentHandlerTests(unittest.TestCase):
                 )
             )
 
+    def test_barometer_pressure_delta_is_shown_in_pascals(self) -> None:
+        self.assertEqual(
+            BarometerTestHandler._delta(10100000, 10099750, "Pa"),
+            "+2.50 Pa",
+        )
+
+    def test_component_failures_are_printed_and_retained(self) -> None:
+        output: list[str] = []
+        handler = SdCardTestHandler(output=output.append)
+        handler.begin(TestDefinition("sd_card", True, {}))
+
+        handler.handle_event(
+            ComponentTestEvent(
+                2,
+                "sd_card",
+                "component_failure",
+                {"stage": "cmd0", "reason": "unexpected_response", "code": 255},
+            )
+        )
+        result = handler.finish(ComponentTestCompletion(2, "sd_card", "failed"))
+
+        self.assertIn("CMD0".lower(), output[-1].lower())
+        self.assertIn("code 255", output[-1])
+        self.assertEqual(result.details["failure"]["stage"], "cmd0")
+
+    def test_imu_uses_independent_physical_scales(self) -> None:
+        acceleration = ImuTestHandler._bar(
+            16384, counts_per_unit=16384.0, full_scale=1.0, decimals=3
+        )
+        gyroscope = ImuTestHandler._bar(
+            4096, counts_per_unit=16.384, full_scale=250.0, decimals=1
+        )
+
+        self.assertIn("+1.000", acceleration)
+        self.assertEqual(acceleration.count("█"), 12)
+        self.assertIn("+250.0", gyroscope)
+        self.assertEqual(gyroscope.count("█"), 12)
+
 
 if __name__ == "__main__":
     unittest.main()

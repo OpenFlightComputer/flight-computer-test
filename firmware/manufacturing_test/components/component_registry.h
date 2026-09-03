@@ -27,6 +27,7 @@ typedef enum {
     COMPONENT_TEST_EVENT_IMU_SAMPLE = 1,
     COMPONENT_TEST_EVENT_BAROMETER_SAMPLE = 2,
     COMPONENT_TEST_EVENT_SD_CARD_INFO = 3,
+    COMPONENT_TEST_EVENT_FAILURE = 4,
 } component_test_event_kind_t;
 
 typedef struct {
@@ -44,6 +45,9 @@ typedef struct {
     uint32_t test_sector;
     uint32_t checksum;
     bool high_capacity;
+    const char *failure_stage;
+    const char *failure_reason;
+    int32_t failure_code;
 } component_test_event_t;
 
 typedef struct {

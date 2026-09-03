@@ -13,10 +13,17 @@ typedef struct {
     bool high_capacity;
 } sd_card_information_t;
 
+typedef struct {
+    const char *stage;
+    const char *reason;
+    int32_t code;
+} sd_card_failure_t;
+
 bool sd_card_driver_initialize(sd_card_information_t *information);
 bool sd_card_driver_write_test_block(sd_card_information_t *information, uint32_t block);
 bool sd_card_driver_verify_test_block(const sd_card_information_t *information, uint32_t block);
 bool sd_card_driver_clear_test_block(const sd_card_information_t *information, uint32_t block);
 void sd_card_driver_shutdown(void);
+const sd_card_failure_t *sd_card_driver_last_failure(void);
 
 #endif

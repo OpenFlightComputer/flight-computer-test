@@ -5,6 +5,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+bool flightcomputer_v1_barometer_i2c_probe(
+    uint8_t address, uint32_t *hal_error
+);
+
 bool flightcomputer_v1_barometer_i2c_read(
     uint8_t address, uint8_t register_address, uint8_t *data, size_t length
 );

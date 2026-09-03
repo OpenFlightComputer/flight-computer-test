@@ -18,7 +18,10 @@ from fc_test.tests.live_operator import LiveOperatorTestHandler
 
 
 class ImuTestHandler(LiveOperatorTestHandler):
-    """Present raw acceleration and gyro axes until the operator finishes."""
+    """Present independently scaled acceleration and gyro measurements."""
+
+    _ACCELERATION_COUNTS_PER_G = 16384.0
+    _GYROSCOPE_COUNTS_PER_DPS = 16.384
 
     def __init__(self, *, input_reader=input) -> None:
         super().__init__(input_reader=input_reader)
@@ -68,15 +71,27 @@ class ImuTestHandler(LiveOperatorTestHandler):
         )
 
     def render(self):
-        table = Table(title="BMI270 live raw data")
+        table = Table(title="BMI270 live motion data")
         table.add_column("Axis")
-        table.add_column("Acceleration")
-        table.add_column("Gyroscope")
+        table.add_column("Acceleration (g, +/-1 g scale)")
+        table.add_column("Gyroscope (deg/s, +/-250 deg/s scale)")
         for axis in ("x", "y", "z"):
+            acceleration = self._latest.get(f"acceleration_raw_{axis}")
+            gyroscope = self._latest.get(f"gyroscope_raw_{axis}")
             table.add_row(
                 axis.upper(),
-                self._bar(self._latest.get(f"acceleration_raw_{axis}")),
-                self._bar(self._latest.get(f"gyroscope_raw_{axis}")),
+                self._bar(
+                    acceleration,
+                    counts_per_unit=self._ACCELERATION_COUNTS_PER_G,
+                    full_scale=1.0,
+                    decimals=3,
+                ),
+                self._bar(
+                    gyroscope,
+                    counts_per_unit=self._GYROSCOPE_COUNTS_PER_DPS,
+                    full_scale=250.0,
+                    decimals=1,
+                ),
             )
         return Group(
             table,
@@ -85,12 +100,20 @@ class ImuTestHandler(LiveOperatorTestHandler):
         )
 
     @staticmethod
-    def _bar(value: int | None) -> str:
-        """Render a centred, deliberately qualitative raw-value column bar."""
+    def _bar(
+        value: int | None,
+        *,
+        counts_per_unit: float,
+        full_scale: float,
+        decimals: int,
+    ) -> str:
+        """Render a signed physical value with its own meaningful scale."""
         if value is None:
             return "—"
         width = 12
-        magnitude = min(width, abs(value) * width // 32768)
+        physical_value = value / counts_per_unit
+        magnitude = min(width, round(abs(physical_value) * width / full_scale))
         left = "█" * magnitude if value < 0 else ""
         right = "█" * magnitude if value >= 0 else ""
-        return f"{value:6d}  {left:>{width}}│{right:<{width}}"
+        formatted = f"{physical_value:+.{decimals}f}"
+        return f"{formatted:>8}  {left:>{width}}│{right:<{width}}"

@@ -289,6 +289,11 @@ bool usb_cdc_transport_queue_line(const uint8_t *line, size_t length)
     return true;
 }
 
+bool usb_cdc_transport_can_queue_line(void)
+{
+    return transmit_line_count < USB_CDC_TRANSMIT_QUEUE_DEPTH;
+}
+
 usb_cdc_transport_statistics_t usb_cdc_transport_statistics(void)
 {
     usb_cdc_transport_statistics_t statistics;

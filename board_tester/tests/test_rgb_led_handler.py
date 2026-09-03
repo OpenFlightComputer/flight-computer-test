@@ -4,7 +4,7 @@ import json
 import unittest
 
 from fc_test.configuration import TestDefinition
-from fc_test.protocol.messages import ComponentTestCompletion
+from fc_test.protocol.messages import ComponentTestEvent
 from fc_test.tests.rgb_led.handler import RgbLedTestHandler
 from fc_test.tests.registry import create_handler
 
@@ -38,10 +38,11 @@ class RgbLedHandlerTests(unittest.TestCase):
             test_type,
             parameters,
             on_event,
-            on_started,
         ):
             received_parameters.append(parameters)
-            return on_started()
+            return on_event(
+                ComponentTestEvent(command_id, test_type, "rgb_colour_active")
+            )
 
         result = RgbLedTestHandler(input_reader=lambda _prompt: "").run(
             connection,

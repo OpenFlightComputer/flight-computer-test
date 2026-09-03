@@ -105,3 +105,28 @@ def require_event_integer(data: dict[str, object], key: str, event: str) -> int:
     if type(value) is not int:
         raise ProtocolMessageError(f"{event} data.{key} must be an integer")
     return value
+
+
+def require_failure_details(event: ComponentTestEvent) -> dict[str, object]:
+    """Validate the diagnostic payload shared by firmware component failures."""
+
+    if event.data is None:
+        raise ProtocolMessageError("component_failure event is missing data")
+    stage = event.data.get("stage")
+    reason = event.data.get("reason")
+    code = event.data.get("code")
+    if not isinstance(stage, str) or not stage:
+        raise ProtocolMessageError("component_failure data.stage must be a string")
+    if not isinstance(reason, str) or not reason:
+        raise ProtocolMessageError("component_failure data.reason must be a string")
+    if type(code) is not int:
+        raise ProtocolMessageError("component_failure data.code must be an integer")
+    return {"stage": stage, "reason": reason, "code": code}
+
+
+def format_component_failure(component: str, failure: dict[str, object]) -> str:
+    """Turn machine-readable stage names into a concise operator message."""
+
+    stage = str(failure["stage"]).replace("_", " ")
+    reason = str(failure["reason"]).replace("_", " ")
+    return f"{component} failed during {stage}: {reason} (code {failure['code']})."

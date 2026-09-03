@@ -30,6 +30,7 @@ usb_cdc_line_result_t usb_cdc_transport_read_line(
 );
 
 bool usb_cdc_transport_queue_line(const uint8_t *line, size_t length);
+bool usb_cdc_transport_can_queue_line(void);
 usb_cdc_transport_statistics_t usb_cdc_transport_statistics(void);
 
 #endif

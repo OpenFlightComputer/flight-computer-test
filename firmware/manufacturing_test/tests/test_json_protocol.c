@@ -171,6 +171,44 @@ static void test_component_response_is_serialized(void)
     assert(strstr(response, "\"type\":\"TEST_EVENT\"") != NULL);
 }
 
+static void test_component_failure_is_serialized_with_diagnostics(void)
+{
+    char response[256];
+    size_t length;
+    const component_test_event_t event = {
+        .kind = COMPONENT_TEST_EVENT_FAILURE,
+        .name = "component_failure",
+        .failure_stage = "cmd0",
+        .failure_reason = "unexpected_response",
+        .failure_code = 255,
+    };
+
+    assert(json_protocol_build_test_event(
+        8U, "sd_card", &event, response, sizeof(response), &length
+    ));
+    assert(strstr(response, "\"stage\":\"cmd0\"") != NULL);
+    assert(strstr(response, "\"reason\":\"unexpected_response\"") != NULL);
+    assert(strstr(response, "\"code\":255") != NULL);
+}
+
+static void test_large_sd_sector_count_is_serialized_without_long_long_printf(void)
+{
+    char response[256];
+    size_t length;
+    const component_test_event_t event = {
+        .kind = COMPONENT_TEST_EVENT_SD_CARD_INFO,
+        .name = "sd_card_initialized",
+        .sector_count = UINT64_C(4294967296),
+        .test_sector = 123U,
+        .high_capacity = true,
+    };
+
+    assert(json_protocol_build_test_event(
+        8U, "sd_card", &event, response, sizeof(response), &length
+    ));
+    assert(strstr(response, "\"sector_count\":4294967296") != NULL);
+}
+
 int main(void)
 {
     test_start_request_is_decoded_independent_of_field_order();
@@ -180,5 +218,7 @@ int main(void)
     test_rgb_parameters_are_decoded_in_any_field_order();
     test_invalid_rgb_parameters_are_rejected();
     test_component_response_is_serialized();
+    test_component_failure_is_serialized_with_diagnostics();
+    test_large_sd_sector_count_is_serialized_without_long_long_printf();
     return 0;
 }

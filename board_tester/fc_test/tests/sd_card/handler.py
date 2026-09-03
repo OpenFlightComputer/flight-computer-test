@@ -10,6 +10,8 @@ from fc_test.protocol.messages import (
 from fc_test.tests.base import (
     ComponentTestHandler,
     ComponentTestResult,
+    format_component_failure,
+    require_failure_details,
     require_event_integer,
 )
 
@@ -32,10 +34,12 @@ class SdCardTestHandler(ComponentTestHandler):
         self._output = output
         self._events: list[str] = []
         self._card: dict[str, object] = {}
+        self._failure: dict[str, object] | None = None
 
     def begin(self, definition) -> None:
         self._events = []
         self._card = {}
+        self._failure = None
         self._output("Starting automatic SD-card test.")
         self._output(
             "WARNING: This test overwrites and clears eight raw sectors near "
@@ -45,6 +49,10 @@ class SdCardTestHandler(ComponentTestHandler):
 
     def handle_event(self, event: ComponentTestEvent) -> ComponentTestCompletion | None:
         self._events.append(event.event)
+        if event.event == "component_failure":
+            self._failure = require_failure_details(event)
+            self._output(format_component_failure("SD card", self._failure))
+            return None
         self._output(self._MESSAGES.get(event.event, f"sd_card: {event.event}"))
         if event.data is not None:
             self._card = dict(event.data)
@@ -73,5 +81,6 @@ class SdCardTestHandler(ComponentTestHandler):
                 "firmware_status": completion.status,
                 "events": list(self._events),
                 "card": dict(self._card),
+                "failure": self._failure,
             },
         )

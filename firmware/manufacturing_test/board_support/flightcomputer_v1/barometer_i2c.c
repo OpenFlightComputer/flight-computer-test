@@ -38,6 +38,26 @@ static bool initialize_barometer_i2c(void)
     return true;
 }
 
+bool flightcomputer_v1_barometer_i2c_probe(
+    uint8_t address, uint32_t *hal_error
+)
+{
+    HAL_StatusTypeDef status;
+
+    if (hal_error == NULL) {
+        return false;
+    }
+    *hal_error = 0U;
+    if (!initialize_barometer_i2c()) {
+        return false;
+    }
+    status = HAL_I2C_IsDeviceReady(
+        &barometer_i2c, (uint16_t)address << 1U, 3U, 20U
+    );
+    *hal_error = HAL_I2C_GetError(&barometer_i2c);
+    return status == HAL_OK;
+}
+
 bool flightcomputer_v1_barometer_i2c_read(
     uint8_t address, uint8_t register_address, uint8_t *data, size_t length
 )

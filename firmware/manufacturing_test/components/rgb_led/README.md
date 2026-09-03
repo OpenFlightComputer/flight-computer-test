@@ -1,8 +1,10 @@
 # RGB LED component
 
-Flight Computer V1 drives the WS2812B-family LED on PA1 through TIM2 channel 2
-and DMA1 stream 6/channel 3. The timer produces the 800 kHz wire timing while
-DMA supplies one compare value per bit without blocking the application loop.
+Flight Computer V1 drives its single WS2812B-family LED on PA1 with direct GPIO
+writes timed by the Cortex-M4 cycle counter. Interrupts are masked for the
+approximately 30 microseconds needed to send one 24-bit frame, then restored to
+their previous state. This implementation was verified on the assembled V1
+board after the original TIM2/PWM/DMA implementation produced no LED output.
 
 The board tester sends raw RGB values selected by its human-friendly colour
 policy. The encoder translates that RGB API into the LED's GRB wire order.

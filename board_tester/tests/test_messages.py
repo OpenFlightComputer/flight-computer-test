@@ -31,7 +31,7 @@ from fc_test.session_validation import SessionValidation
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-CURRENT_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v004.json"
+CURRENT_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v006.json"
 
 
 def response_line(*, command_id: int = 1) -> bytes:
@@ -89,6 +89,12 @@ class MessageTests(unittest.TestCase):
                 b'"command_id":2,"test_type":"imu","status":"unknown"}',
                 expected_command_id=2,
                 expected_test_type="imu",
+            )
+
+    def test_invalid_json_error_preserves_received_line(self) -> None:
+        with self.assertRaisesRegex(ProtocolMessageError, "received b''"):
+            decode_component_test_message(
+                b"", expected_command_id=2, expected_test_type="sd_card"
             )
 
     def test_imu_event_preserves_structured_raw_axes(self) -> None:

@@ -12,6 +12,7 @@ extern component_test_process_result_t status_led_process(void);
 extern void status_led_stop(void);
 extern void rgb_led_test_start(const component_test_parameters_t *parameters);
 extern component_test_process_result_t rgb_led_test_process(void);
+extern const component_test_event_t *rgb_led_test_event(void);
 extern void rgb_led_test_stop(void);
 extern void bmi270_test_start(const component_test_parameters_t *parameters);
 extern component_test_process_result_t bmi270_test_process(void);
@@ -31,7 +32,7 @@ static const component_test_definition_t production_tests[] = {
     { .type = "status_led_green", .start = status_led_green_start,
       .process = status_led_process, .event = NULL, .stop = status_led_stop },
     { .type = "rgb_led", .start = rgb_led_test_start,
-      .process = rgb_led_test_process, .event = NULL,
+      .process = rgb_led_test_process, .event = rgb_led_test_event,
       .stop = rgb_led_test_stop },
     { .type = "imu", .start = bmi270_test_start,
       .process = bmi270_test_process, .event = bmi270_test_event,

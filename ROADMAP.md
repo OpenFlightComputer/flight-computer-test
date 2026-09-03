@@ -20,12 +20,15 @@ Development proceeds one accepted milestone at a time. The current status is rec
 14. microSD write/read/checksum/cleanup test
 15. Complete one-command V1 acceptance workflow
 
-## Near term
+## Tester V2
 
-- All onboard V1 component tests
-- Stronger configuration validation
-- Refined result schemas
-- Automated board-tester unit tests
+- Make the SD-card test safe for non-disposable media by using an explicitly
+  provisioned scratch region or preserving and restoring the original blocks.
+- Require valid IMU and barometer samples before enabling operator acceptance;
+  later add configurable minimum sample counts and qualitative change checks.
+- Replace the growing all-fields component event structure with a tagged union
+  or generated component-specific payload types while retaining strict schema
+  validation on the Python side.
 
 ## Later
 

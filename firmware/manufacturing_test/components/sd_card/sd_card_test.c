@@ -52,6 +52,23 @@ static void card_information_event(const char *name)
     };
 }
 
+static void failure_event(const char *stage, const char *reason, int32_t code)
+{
+    latest_event = (component_test_event_t){
+        .kind = COMPONENT_TEST_EVENT_FAILURE,
+        .name = "component_failure",
+        .failure_stage = stage,
+        .failure_reason = reason,
+        .failure_code = code,
+    };
+}
+
+static void driver_failure_event(void)
+{
+    const sd_card_failure_t *failure = sd_card_driver_last_failure();
+    failure_event(failure->stage, failure->reason, failure->code);
+}
+
 static bool stable_card_state(bool inserted)
 {
     const uint32_t now = HAL_GetTick();
@@ -117,19 +134,30 @@ component_test_process_result_t sd_card_test_process(void)
         return COMPONENT_TEST_PROCESS_EVENT;
 
     case SD_CARD_INITIALIZING:
-        if (!card_is_present() || !sd_card_driver_initialize(&information)) {
+        if (!card_is_present()) {
+            failure_event("initialization", "card_removed", 0);
             state = SD_CARD_FAILED;
-            return COMPONENT_TEST_PROCESS_FAILED;
+            return COMPONENT_TEST_PROCESS_EVENT;
+        }
+        if (!sd_card_driver_initialize(&information)) {
+            driver_failure_event();
+            state = SD_CARD_FAILED;
+            return COMPONENT_TEST_PROCESS_EVENT;
         }
         state = SD_CARD_WRITING;
         card_information_event("sd_card_initialized");
         return COMPONENT_TEST_PROCESS_EVENT;
 
     case SD_CARD_WRITING:
-        if (!card_is_present() ||
-            !sd_card_driver_write_test_block(&information, current_block)) {
+        if (!card_is_present()) {
+            failure_event("write", "card_removed", (int32_t)current_block);
             state = SD_CARD_FAILED;
-            return COMPONENT_TEST_PROCESS_FAILED;
+            return COMPONENT_TEST_PROCESS_EVENT;
+        }
+        if (!sd_card_driver_write_test_block(&information, current_block)) {
+            driver_failure_event();
+            state = SD_CARD_FAILED;
+            return COMPONENT_TEST_PROCESS_EVENT;
         }
         if (++current_block < SD_CARD_TEST_BLOCK_COUNT) {
             return COMPONENT_TEST_PROCESS_RUNNING;
@@ -140,10 +168,15 @@ component_test_process_result_t sd_card_test_process(void)
         return COMPONENT_TEST_PROCESS_EVENT;
 
     case SD_CARD_VERIFYING:
-        if (!card_is_present() ||
-            !sd_card_driver_verify_test_block(&information, current_block)) {
+        if (!card_is_present()) {
+            failure_event("verify", "card_removed", (int32_t)current_block);
             state = SD_CARD_FAILED;
-            return COMPONENT_TEST_PROCESS_FAILED;
+            return COMPONENT_TEST_PROCESS_EVENT;
+        }
+        if (!sd_card_driver_verify_test_block(&information, current_block)) {
+            driver_failure_event();
+            state = SD_CARD_FAILED;
+            return COMPONENT_TEST_PROCESS_EVENT;
         }
         if (++current_block < SD_CARD_TEST_BLOCK_COUNT) {
             return COMPONENT_TEST_PROCESS_RUNNING;
@@ -154,10 +187,15 @@ component_test_process_result_t sd_card_test_process(void)
         return COMPONENT_TEST_PROCESS_EVENT;
 
     case SD_CARD_CLEANING_UP:
-        if (!card_is_present() ||
-            !sd_card_driver_clear_test_block(&information, current_block)) {
+        if (!card_is_present()) {
+            failure_event("cleanup", "card_removed", (int32_t)current_block);
             state = SD_CARD_FAILED;
-            return COMPONENT_TEST_PROCESS_FAILED;
+            return COMPONENT_TEST_PROCESS_EVENT;
+        }
+        if (!sd_card_driver_clear_test_block(&information, current_block)) {
+            driver_failure_event();
+            state = SD_CARD_FAILED;
+            return COMPONENT_TEST_PROCESS_EVENT;
         }
         if (++current_block < SD_CARD_TEST_BLOCK_COUNT) {
             return COMPONENT_TEST_PROCESS_RUNNING;

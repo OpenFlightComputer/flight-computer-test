@@ -25,7 +25,7 @@ from fc_test.tests.base import GenericComponentTestHandler
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-CURRENT_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v004.json"
+CURRENT_TEST_CONFIG = REPOSITORY_ROOT / "configs/test/test-config-v006.json"
 
 
 class RunnerTests(unittest.TestCase):
@@ -123,8 +123,6 @@ class RunnerTests(unittest.TestCase):
             [
                 (
                     (
-                        ComponentOutcome("status_led_red", "passed"),
-                        ComponentOutcome("status_led_green", "passed"),
                         ComponentOutcome("rgb_led", "passed"),
                         ComponentOutcome("imu", "passed"),
                         ComponentOutcome("barometer", "passed"),
@@ -148,19 +146,17 @@ class RunnerTests(unittest.TestCase):
             "STM32F405RGT6\n"
             "\n"
             "Test Configuration:\n"
-            "Flight Computer V1 Complete Acceptance\n"
+            "Flight Computer V1 Accepted Hardware\n"
             "\n"
             "UUID:\n"
-            "642e3504-c499-409c-858f-ac6b5e2850cf\n"
+            "9c7d5a34-1e2b-4f68-9a70-2bc1d3e4f506\n"
             "\n"
             "Configured test order:\n"
             "\n"
-            "1. status_led_red\n"
-            "2. status_led_green\n"
-            "3. rgb_led\n"
-            "4. imu\n"
-            "5. barometer\n"
-            "6. sd_card\n"
+            "1. rgb_led\n"
+            "2. imu\n"
+            "3. barometer\n"
+            "4. sd_card\n"
             "\n"
             "Building and flashing firmware (Release)...\n"
             "Firmware: /build/manufacturing-test.elf\n"

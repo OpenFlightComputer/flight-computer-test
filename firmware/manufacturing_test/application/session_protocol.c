@@ -126,7 +126,8 @@ void session_protocol_process(void)
 {
     size_t line_length;
 
-    while (usb_cdc_transport_read_line(
+    /* Leave complete requests queued until their response has somewhere to go. */
+    while (usb_cdc_transport_can_queue_line() && usb_cdc_transport_read_line(
         line_buffer,
         sizeof(line_buffer),
         &line_length
@@ -134,8 +135,9 @@ void session_protocol_process(void)
         process_line(line_buffer, line_length);
     }
 
-    if (component_test_runner_state(&component_test_runner) ==
-        COMPONENT_TEST_RUNNER_RUNNING) {
+    if (usb_cdc_transport_can_queue_line() &&
+        component_test_runner_state(&component_test_runner) ==
+            COMPONENT_TEST_RUNNER_RUNNING) {
         const char *active_type = component_test_runner_active_type(
             &component_test_runner
         );
