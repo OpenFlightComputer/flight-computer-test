@@ -16,7 +16,7 @@ Milestone 15 — complete one-command V1 acceptance workflow: **complete and com
 
 ## Current hardware acceptance
 
-Physical V1 acceptance is complete for the working tests enabled by configuration v005.
+Physical V1 acceptance is complete for configuration v006.
 The first assembled board completed a full passing run covering SWD programming,
 firmware verification, reset, clock start, USB enumeration and protocol, RGB
 output, BMI270 sampling, BMP388 sampling, and microSD detection/write/read/cleanup.
@@ -40,8 +40,8 @@ The current uncommitted bring-up fixes:
 - preserves the received raw-line excerpt when tester JSON decoding fails.
 
 Current validation: 90 Python tests, five native C tests, strict Debug and
-Release firmware builds, and one full physical v005 acceptance run pass. The
-changes remain uncommitted for owner review. See `docs/findings-v1-board.md` and
+Release firmware builds, and one full physical v006 acceptance run from clean
+commit `1642cde5f7bb` pass. See `docs/findings-v1-board.md` and
 `docs/findings-v1-tester.md` for the permanent bring-up record.
 
 ## Recent milestone details
@@ -286,7 +286,7 @@ changes remain uncommitted for owner review. See `docs/findings-v1-board.md` and
 - HSE startup, the application loop, SWD flashing, USB enumeration, and BMI270 communication have passed initial on-board bring-up; long-duration and repeat-unit validation remain outstanding.
 - Confirm whether PC10/PC11 (`RP1_RX`/`RP1_TX`) are intended to use UART4 or USART3 and document signal naming from both MCU and external-device perspectives.
 - Confirm the intended timer/output mode for PC6–PC9 ESC signals when motor-interface testing enters scope; it is explicitly outside V1.
-- D4/D5 are confirmed reversed on revision 0.1 and cannot illuminate as assembled. Test configuration v005 disables them; rotate the prototype LEDs or correct their polarity in the next hardware revision before re-enabling the tests.
+- D4/D5 are confirmed reversed on revision 0.1 and cannot illuminate as assembled. Test configuration v005 disabled them and current configuration v006 omits them; rotate the prototype LEDs or correct their polarity in the next hardware revision before re-enabling the tests.
 - The 3.3 V PA1 signal successfully drives the 5 V WS2812 on the first board,
   but V2 should add a level shifter for production input-high margin.
 - Investigate the KiCad CLI DRC crash and obtain a complete DRC report before treating the current PCB as manufacturing-verified.
@@ -294,8 +294,6 @@ changes remain uncommitted for owner review. See `docs/findings-v1-board.md` and
 ## Handoff
 
 The V1 tester is functionally complete. Configuration v006 removes the known-
-broken D4/D5 tests and otherwise matches the four-test procedure that physically
-passed under v005. After owner review, commit the bring-up fixes, rebuild from
-the clean commit, and capture one clean v006 acceptance report. Further tester
-work is deferred to `ROADMAP.md`; development can then concentrate on the
-operational flight firmware.
+broken D4/D5 tests, and its clean physical acceptance report is checked in as a
+sanitized example. Further tester work is deferred to `ROADMAP.md`; development
+can now concentrate on the operational flight firmware.

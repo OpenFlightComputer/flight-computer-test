@@ -94,13 +94,13 @@ then report only the commit hash.
 
 ## Accepted result
 
-The first complete v005 hardware pass is preserved as a sanitized example in
+The final clean v006 hardware pass is preserved as a sanitized example in
 [`example-results/flightcomputer-v1-successful-run.json`](example-results/flightcomputer-v1-successful-run.json).
-It passed turquoise RGB output, 376 IMU samples, 245 barometer samples, and the
+It passed turquoise RGB output, 178 IMU samples, 101 barometer samples, and the
 automatic SD-card write/read/checksum/cleanup sequence. The device UID and local
-absolute paths are redacted because the repository is public. This bring-up run
-correctly retains its `-dirty` marker; it should be followed by a clean archival
-run after the fixes are committed.
+absolute paths are redacted because the repository is public. The firmware was
+built from clean commit `1642cde5f7bb`, so the report contains no `-dirty`
+marker and can be reconstructed from the named source revision.
 
 ## Practices to carry forward
 

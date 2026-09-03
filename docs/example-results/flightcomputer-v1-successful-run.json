@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "status": "passed",
-  "started_at": "2026-09-03T15:40:19.747877Z",
-  "completed_at": "2026-09-03T15:42:28.597649Z",
+  "started_at": "2026-09-03T19:31:42.935167Z",
+  "completed_at": "2026-09-03T19:32:37.448775Z",
   "test_configuration": {
-    "uuid": "445fe100-ac90-474f-88ff-e0765b941b1f",
-    "name": "Flight Computer V1 Acceptance Without Status LEDs",
-    "path": "configs/test/test-config-v005.json"
+    "uuid": "9c7d5a34-1e2b-4f68-9a70-2bc1d3e4f506",
+    "name": "Flight Computer V1 Accepted Hardware",
+    "path": "configs/test/test-config-v006.json"
   },
   "board_configuration": {
     "id": "flightcomputer-v1",
@@ -23,7 +23,7 @@
   },
   "firmware": {
     "version": "0.1.0",
-    "git_revision": "3bab4e91692d-dirty"
+    "git_revision": "1642cde5f7bb"
   },
   "capabilities": [
     "status_led_red",
@@ -35,7 +35,7 @@
   ],
   "session_validation": {
     "status": "passed",
-    "validated_at": "2026-09-03T15:40:19.751639Z",
+    "validated_at": "2026-09-03T19:31:42.938261Z",
     "board_capabilities": [
       "status_led_red",
       "status_led_green",
@@ -58,7 +58,7 @@
     {
       "type": "rgb_led",
       "status": "passed",
-      "completed_at": "2026-09-03T15:40:37.186541Z",
+      "completed_at": "2026-09-03T19:31:48.596712Z",
       "colour": "turquoise",
       "rgb": {"red": 64, "green": 224, "blue": 208},
       "operator_response": "passed"
@@ -66,36 +66,38 @@
     {
       "type": "imu",
       "status": "passed",
-      "completed_at": "2026-09-03T15:41:15.026954Z",
+      "completed_at": "2026-09-03T19:32:06.565152Z",
       "firmware_status": "passed",
-      "sample_count": 376,
+      "sample_count": 178,
       "last_raw_sample": {
-        "acceleration_raw_x": 10493,
-        "acceleration_raw_y": 923,
-        "acceleration_raw_z": 12929,
-        "gyroscope_raw_x": -30,
-        "gyroscope_raw_y": -8,
-        "gyroscope_raw_z": 11
+        "acceleration_raw_x": 2160,
+        "acceleration_raw_y": 780,
+        "acceleration_raw_z": 16840,
+        "gyroscope_raw_x": -13,
+        "gyroscope_raw_y": 161,
+        "gyroscope_raw_z": -27
       }
     },
     {
       "type": "barometer",
       "status": "passed",
-      "completed_at": "2026-09-03T15:42:06.018348Z",
+      "completed_at": "2026-09-03T19:32:28.774747Z",
       "firmware_status": "passed",
-      "sample_count": 245,
-      "initial_pressure_pa": 101148.55,
-      "initial_temperature_c": 29.66,
-      "last_pressure_pa": 101160.1,
-      "last_temperature_c": 28.66,
+      "sample_count": 101,
+      "initial_pressure_pa": 101265.38,
+      "initial_temperature_c": 25.01,
+      "last_pressure_pa": 101264.56,
+      "last_temperature_c": 25.98,
       "failure": null
     },
     {
       "type": "sd_card",
       "status": "passed",
-      "completed_at": "2026-09-03T15:42:28.596043Z",
+      "completed_at": "2026-09-03T19:32:37.447016Z",
       "firmware_status": "passed",
       "events": [
+        "sd_card_remove_required",
+        "sd_card_removed",
         "sd_card_insert_required",
         "sd_card_detected",
         "sd_card_initialized",
